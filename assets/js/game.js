@@ -13,10 +13,8 @@ canvas.width = VIEW_W * scale;
 canvas.height = VIEW_H * scale;
 ctx.scale(scale, scale);
 
-// Game states
-let gameState = "select"; // "select" or "playing"
+let gameState = "select";
 
-// Characters
 const characters = [
   {
     name: "Blueberry",
@@ -28,32 +26,30 @@ const characters = [
   {
     name: "Tomato",
     ability: "Places a puddle that slows enemies and speeds up allies",
-    color: "#E03030",
-    img: null,
-    useImg: false
+    color: null,
+    img: new Image(),
+    useImg: true
   },
   {
     name: "Banana",
     ability: "Places a peel that damages enemies and minions",
-    color: "#FFE030",
-    img: null,
-    useImg: false
+    color: null,
+    img: new Image(),
+    useImg: true
   }
 ];
+
 characters[0].img.src = "assets/sprites/blueberry.png";
+characters[1].img.src = "assets/sprites/tomato.png";
+characters[2].img.src = "assets/sprites/banana.png";
 
 let selectedIndex = 0;
-let carouselOffset = 0; // for smooth sliding animation
+let carouselOffset = 0;
 let targetOffset = 0;
 
-// Arrow images (we'll draw them as triangles)
-const ARROW_SIZE = 30;
-
-// Map
 const mapImg = new Image();
 mapImg.src = "assets/sprites/mapsprite.png";
 
-// Player
 let player = null;
 
 function createPlayer(charIndex) {
@@ -67,7 +63,6 @@ function createPlayer(charIndex) {
   };
 }
 
-// Input
 const keys = {};
 document.addEventListener("keydown", e => {
   keys[e.key] = true;
@@ -88,7 +83,6 @@ document.addEventListener("keydown", e => {
 });
 document.addEventListener("keyup", e => keys[e.key] = false);
 
-// Mouse click for arrows and confirm
 canvas.addEventListener("click", e => {
   if (gameState !== "select") return;
 
@@ -96,19 +90,16 @@ canvas.addEventListener("click", e => {
   const mx = (e.clientX - rect.left) / scale;
   const my = (e.clientY - rect.top) / scale;
 
-  // Left arrow: center - 150, center y ~200
   if (mx >= 60 && mx <= 120 && my >= 170 && my <= 230) {
     selectedIndex = (selectedIndex - 1 + characters.length) % characters.length;
     targetOffset = selectedIndex * 200;
   }
 
-  // Right arrow
   if (mx >= 380 && mx <= 440 && my >= 170 && my <= 230) {
     selectedIndex = (selectedIndex + 1) % characters.length;
     targetOffset = selectedIndex * 200;
   }
 
-  // Confirm button
   if (mx >= 175 && mx <= 325 && my >= 370 && my <= 410) {
     startGame();
   }
@@ -121,7 +112,6 @@ function startGame() {
 
 function update() {
   if (gameState === "select") {
-    // Smooth carousel sliding
     carouselOffset += (targetOffset - carouselOffset) * 0.15;
   }
 
@@ -147,11 +137,9 @@ function getCamera() {
 }
 
 function drawSelectScreen() {
-  // Background
   ctx.fillStyle = "#1a1a2e";
   ctx.fillRect(0, 0, VIEW_W, VIEW_H);
 
-  // Title
   ctx.fillStyle = "#ffffff";
   ctx.font = "bold 32px sans-serif";
   ctx.textAlign = "center";
@@ -161,7 +149,6 @@ function drawSelectScreen() {
   ctx.fillStyle = "#aaaaaa";
   ctx.fillText("Choose your character", VIEW_W / 2, 90);
 
-  // Draw 3 character cards in a row, slide based on carouselOffset
   const cardW = 120;
   const cardH = 140;
   const cardY = 130;
@@ -172,12 +159,10 @@ function drawSelectScreen() {
     const char = characters[i];
     const cardX = centerX + (i * spacing) - carouselOffset - cardW / 2;
 
-    // Only draw if somewhat visible
     if (cardX + cardW < -50 || cardX > VIEW_W + 50) continue;
 
     const isSelected = i === selectedIndex;
 
-    // Card background
     ctx.fillStyle = isSelected ? "#2e2e5e" : "#16162a";
     ctx.strokeStyle = isSelected ? "#ffffff" : "#444466";
     ctx.lineWidth = isSelected ? 3 : 1;
@@ -186,7 +171,6 @@ function drawSelectScreen() {
     ctx.fill();
     ctx.stroke();
 
-    // Character sprite or placeholder
     if (char.useImg && char.img.complete) {
       ctx.drawImage(char.img, cardX + 28, cardY + 10, 64, 64);
     } else if (!char.useImg) {
@@ -194,33 +178,21 @@ function drawSelectScreen() {
       ctx.fillRect(cardX + 28, cardY + 10, 64, 64);
     }
 
-    // Character name
     ctx.fillStyle = isSelected ? "#ffffff" : "#aaaaaa";
     ctx.font = isSelected ? "bold 13px sans-serif" : "12px sans-serif";
     ctx.textAlign = "center";
     ctx.fillText(char.name, cardX + cardW / 2, cardY + cardH - 15);
   }
 
-  // Left arrow
-  ctx.fillStyle = "#ffffff";
-  ctx.beginPath();
-  ctx.moveTo(120, 200);
-  ctx.lineTo(70, 200);
-  ctx.lineTo(95, 175);
-  ctx.closePath();
-  ctx.fill();
-  // actually draw proper left/right arrows
   drawArrow(90, 200, "left");
   drawArrow(410, 200, "right");
 
-  // Ability description
   const char = characters[selectedIndex];
   ctx.fillStyle = "#cccccc";
   ctx.font = "13px sans-serif";
   ctx.textAlign = "center";
   wrapText(ctx, char.ability, VIEW_W / 2, 310, 300, 20);
 
-  // Confirm button
   ctx.fillStyle = "#3a3aaa";
   ctx.strokeStyle = "#ffffff";
   ctx.lineWidth = 2;
