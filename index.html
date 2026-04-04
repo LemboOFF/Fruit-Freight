@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Fruit Freight</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #000; display: flex; justify-content: center; align-items: center; height: 100vh; }
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas"></canvas>
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    // Map dimensions
+    const MAP_WIDTH = 1000;
+    const MAP_HEIGHT = 1500;
+    const GROUND_Y = 584; // where the ground starts
+
+    // Scale canvas to fit screen
+    const scale = Math.min(window.innerWidth / MAP_WIDTH, window.innerHeight / MAP_HEIGHT);
+    canvas.width = MAP_WIDTH * scale;
+    canvas.height = MAP_HEIGHT * scale;
+    ctx.scale(scale, scale);
+
+    // Load map
+    const mapImg = new Image();
+    mapImg.src = "mapsprite.png";
+
+    // Player
+    const player = {
+      x: 500,
+      y: 800,
+      width: 32,
+      height: 32,
+      speed: 4,
+      img: new Image()
+    };
+    player.img.src = "blueberry.png";
+
+    // Input
+    const keys = {};
+    document.addEventListener("keydown", e => keys[e.key] = true);
+    document.addEventListener("keyup", e => keys[e.key] = false);
+
+    function update() {
+      if (keys["w"] || keys["W"]) player.y -= player.speed;
+      if (keys["s"] || keys["S"]) player.y += player.speed;
+      if (keys["a"] || keys["A"]) player.x -= player.speed;
+      if (keys["d"] || keys["D"]) player.x += player.speed;
+
+      // Keep player on the ground area
+      if (player.y < GROUND_Y) player.y = GROUND_Y;
+      if (player.y + player.height > MAP_HEIGHT) player.y = MAP_HEIGHT - player.height;
+      if (player.x < 0) player.x = 0;
+      if (player.x + player.width > MAP_WIDTH) player.x = MAP_WIDTH - player.width;
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, MAP_WIDTH, MAP_HEIGHT);
+
+      // Draw map
+      if (mapImg.complete) ctx.drawImage(mapImg, 0, 0, MAP_WIDTH, MAP_HEIGHT);
+
+      // Draw player
+      if (player.img.complete) ctx.drawImage(player.img, player.x, player.y, player.width, player.height);
+    }
+
+    function gameLoop() {
+      update();
+      draw();
+      requestAnimationFrame(gameLoop);
+    }
+
+    mapImg.onload = () => gameLoop();
+  </script>
+</body>
+</html>
