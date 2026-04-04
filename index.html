@@ -18,12 +18,16 @@
     // Map dimensions
     const MAP_WIDTH = 1000;
     const MAP_HEIGHT = 1500;
-    const GROUND_Y = 584; // where the ground starts
+    const GROUND_Y = 584;
 
-    // Scale canvas to fit screen
-    const scale = Math.min(window.innerWidth / MAP_WIDTH, window.innerHeight / MAP_HEIGHT);
-    canvas.width = MAP_WIDTH * scale;
-    canvas.height = MAP_HEIGHT * scale;
+    // Camera view size (what you see)
+    const VIEW_W = 250;
+    const VIEW_H = 250;
+
+    // Scale canvas to fit screen nicely
+    const scale = Math.min(window.innerWidth / VIEW_W, window.innerHeight / VIEW_H);
+    canvas.width = VIEW_W * scale;
+    canvas.height = VIEW_H * scale;
     ctx.scale(scale, scale);
 
     // Load map
@@ -59,14 +63,42 @@
       if (player.x + player.width > MAP_WIDTH) player.x = MAP_WIDTH - player.width;
     }
 
+    function getCamera() {
+      // Center camera on player
+      let camX = player.x + player.width / 2 - VIEW_W / 2;
+      let camY = player.y + player.height / 2 - VIEW_H / 2;
+
+      // Clamp camera so it doesn't go outside the map
+      camX = Math.max(0, Math.min(camX, MAP_WIDTH - VIEW_W));
+      camY = Math.max(0, Math.min(camY, MAP_HEIGHT - VIEW_H));
+
+      return { x: camX, y: camY };
+    }
+
     function draw() {
-      ctx.clearRect(0, 0, MAP_WIDTH, MAP_HEIGHT);
+      const cam = getCamera();
 
-      // Draw map
-      if (mapImg.complete) ctx.drawImage(mapImg, 0, 0, MAP_WIDTH, MAP_HEIGHT);
+      ctx.clearRect(0, 0, VIEW_W, VIEW_H);
 
-      // Draw player
-      if (player.img.complete) ctx.drawImage(player.img, player.x, player.y, player.width, player.height);
+      // Draw only the visible portion of the map
+      if (mapImg.complete) {
+        ctx.drawImage(
+          mapImg,
+          cam.x, cam.y, VIEW_W, VIEW_H, // source: slice of the map
+          0, 0, VIEW_W, VIEW_H           // destination: full canvas
+        );
+      }
+
+      // Draw player relative to camera
+      if (player.img.complete) {
+        ctx.drawImage(
+          player.img,
+          player.x - cam.x,
+          player.y - cam.y,
+          player.width,
+          player.height
+        );
+      }
     }
 
     function gameLoop() {
