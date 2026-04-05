@@ -119,11 +119,11 @@ function drawSelectScreen() {
   ctx.fillRect(0, 0, VIEW_W, VIEW_H);
 
   ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 32px sans-serif";
+  ctx.font = "bold 32px GameFont";
   ctx.textAlign = "center";
   ctx.fillText("Fruit Freight", VIEW_W / 2, 60);
 
-  ctx.font = "16px sans-serif";
+  ctx.font = "16px GameFont";
   ctx.fillStyle = "#aaaaaa";
   ctx.fillText("Choose your character", VIEW_W / 2, 90);
 
@@ -153,7 +153,7 @@ function drawSelectScreen() {
     if (isUnlocked) {
       ctx.drawImage(char.img, cardX + 28, cardY + 10, 64, 64);
       ctx.fillStyle = isSelected ? "#ffffff" : "#aaaaaa";
-      ctx.font = isSelected ? "bold 13px sans-serif" : "12px sans-serif";
+      ctx.font = isSelected ? "bold 13px GameFont" : "12px GameFont";
       ctx.textAlign = "center";
       ctx.fillText(char.name, cardX + cardW / 2, cardY + cardH - 15);
     } else {
@@ -161,7 +161,7 @@ function drawSelectScreen() {
       ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
       ctx.fillRect(cardX + 28, cardY + 10, 64, 64);
       ctx.fillStyle = "#666666";
-      ctx.font = "bold 13px sans-serif";
+      ctx.font = "bold 13px GameFont";
       ctx.textAlign = "center";
       ctx.fillText("LOCKED", cardX + cardW / 2, cardY + cardH - 15);
     }
@@ -172,7 +172,7 @@ function drawSelectScreen() {
 
   const char = characters[selectedIndex];
   ctx.fillStyle = "#cccccc";
-  ctx.font = "13px sans-serif";
+  ctx.font = "13px GameFont";
   ctx.textAlign = "center";
   wrapText(ctx, char.ability, VIEW_W / 2, 295, 300, 20);
 
@@ -187,11 +187,11 @@ function drawSelectScreen() {
   ctx.stroke();
 
   ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 16px sans-serif";
+  ctx.font = "bold 16px GameFont";
   ctx.textAlign = "center";
   ctx.fillText("Play!", VIEW_W / 2, 446);
 
-  ctx.font = "12px sans-serif";
+  ctx.font = "12px GameFont";
   ctx.fillStyle = "#888888";
   ctx.fillText("← → to browse  |  Enter to confirm", VIEW_W / 2, 480);
 }
@@ -214,7 +214,7 @@ function drawGame() {
     ctx.drawImage(boss.img, boss.x - cam.x, boss.y - cam.y, boss.width, boss.height);
     drawHPBar(boss.x - cam.x, boss.y - cam.y - 12, boss.width, boss.hp, boss.maxHp, "#ff4444");
     ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 12px sans-serif";
+    ctx.font = "bold 12px GameFont";
     ctx.textAlign = "center";
     ctx.fillText(boss.name, boss.x - cam.x + boss.width / 2, boss.y - cam.y - 16);
   }
@@ -258,7 +258,7 @@ function drawGame() {
   if (player.charIndex === 1) {
     const cooldownPct = player.abilityCooldown / PUDDLE_COOLDOWN;
     ctx.fillStyle = cooldownPct > 0 ? "#888888" : "#44ff44";
-    ctx.font = "11px sans-serif";
+    ctx.font = "11px GameFont";
     ctx.textAlign = "left";
     ctx.fillText(cooldownPct > 0 ? `Puddle: ${Math.ceil(player.abilityCooldown / 60)}s` : "Puddle: Ready!", 10, 40);
   }
@@ -266,7 +266,7 @@ function drawGame() {
   // Boss HP bar top right
   if (boss.hp > 0) {
     ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 13px sans-serif";
+    ctx.font = "bold 13px GameFont";
     ctx.textAlign = "right";
     ctx.fillText(boss.name, VIEW_W - 10, 22);
     drawHPBar(VIEW_W - 165, 10, 150, boss.hp, boss.maxHp, "#ff4444");
@@ -277,10 +277,10 @@ function drawGameOver() {
   ctx.fillStyle = "rgba(0,0,0,0.7)";
   ctx.fillRect(0, 0, VIEW_W, VIEW_H);
   ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 48px sans-serif";
+  ctx.font = "bold 48px GameFont";
   ctx.textAlign = "center";
   ctx.fillText("Game Over", VIEW_W / 2, VIEW_H / 2 - 20);
-  ctx.font = "18px sans-serif";
+  ctx.font = "18px GameFont";
   ctx.fillStyle = "#aaaaaa";
   ctx.fillText("Refresh to try again", VIEW_W / 2, VIEW_H / 2 + 20);
 }
@@ -289,10 +289,10 @@ function drawBossTransition() {
   ctx.fillStyle = "#808080"; // Gray background
   ctx.fillRect(0, 0, VIEW_W, VIEW_H);
   ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 36px sans-serif";
+  ctx.font = "bold 36px GameFont";
   ctx.textAlign = "center";
   ctx.fillText("You beat Potato!", VIEW_W / 2, VIEW_H / 2 - 20);
-  ctx.font = "bold 24px sans-serif";
+  ctx.font = "bold 24px GameFont";
   ctx.fillText("Cucumber is coming next!", VIEW_W / 2, VIEW_H / 2 + 20);
 }
 
@@ -300,10 +300,10 @@ function drawWin() {
   ctx.fillStyle = "rgba(0,0,0,0.7)";
   ctx.fillRect(0, 0, VIEW_W, VIEW_H);
   ctx.fillStyle = "#ffff44";
-  ctx.font = "bold 48px sans-serif";
+  ctx.font = "bold 48px GameFont";
   ctx.textAlign = "center";
   ctx.fillText("You Win!", VIEW_W / 2, VIEW_H / 2 - 20);
-  ctx.font = "18px sans-serif";
+  ctx.font = "18px GameFont";
   ctx.fillStyle = "#aaaaaa";
   ctx.fillText("Refresh to play again", VIEW_W / 2, VIEW_H / 2 + 20);
 }
