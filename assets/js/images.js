@@ -98,9 +98,29 @@ characters[3].attackImg.src = "assets/sprites/blueberry-attack.png";
 let imgsLoaded = 0;
 const totalImgs = 21;
 
+// Font loading
+let fontLoaded = false;
+const gameFont = new FontFace('GameFont', 'url(assets/font/GameFont.ttf)');
+
+gameFont.load().then(function(loadedFont) {
+  document.fonts.add(loadedFont);
+  fontLoaded = true;
+  checkAllLoaded();
+}).catch(function(error) {
+  console.warn('Font failed to load, using fallback:', error);
+  fontLoaded = true; // Continue even if font fails
+  checkAllLoaded();
+});
+
+function checkAllLoaded() {
+  if (imgsLoaded >= totalImgs && fontLoaded) {
+    gameLoop();
+  }
+}
+
 function onImgLoad() {
   imgsLoaded++;
-  if (imgsLoaded >= totalImgs) gameLoop();
+  checkAllLoaded();
 }
 
 mapImg.onload = onImgLoad;

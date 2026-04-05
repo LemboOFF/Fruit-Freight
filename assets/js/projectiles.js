@@ -29,6 +29,17 @@ function updateProjectiles() {
       p.x = -999;
     }
 
+    // Check collision with player (for boss projectiles)
+    if (isColliding(p, player) && p.framesAlive > 5 && p.source === 'boss' && player.damageCooldown === 0) {
+      player.halfHearts -= 1;
+      player.damageCooldown = 60; // Same cooldown as fry damage
+      p.x = -999;
+      if (player.halfHearts <= 0) {
+        player.halfHearts = 0;
+        gameState = "gameover";
+      }
+    }
+
     for (const fry of minions) {
       if (isColliding(p, fry)) {
         fry.hp -= p.damage;

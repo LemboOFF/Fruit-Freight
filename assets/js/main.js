@@ -53,10 +53,7 @@ document.addEventListener("keydown", e => {
       placePuddle();
       player.abilityCooldown = PUDDLE_COOLDOWN;
     }
-    if (e.key === " " && player.charIndex === 3 && player.abilityCooldown === 0) {
-      deployBluBots();
-      player.abilityCooldown = 120; // 2 seconds cooldown
-    }
+    // Robo-Berry now deploys BluBots automatically
     if (e.key === "Escape") {
       returnToMenu();
     }
@@ -285,6 +282,31 @@ function update() {
 
   if (gameState === "playing") {
     updatePlayer();
+    
+    // Robo-Berry automatic BluBot deployment
+    if (player.charIndex === 3 && player.abilityCooldown === 0) {
+      // Check if there are enemies nearby
+      let hasNearbyEnemies = false;
+      if (boss && boss.hp > 0) {
+        const dist = distEntities(player, boss);
+        if (dist < 200) hasNearbyEnemies = true;
+      }
+      for (const minion of minions) {
+        if (minion.hp > 0) {
+          const dist = distEntities(player, minion);
+          if (dist < 150) {
+            hasNearbyEnemies = true;
+            break;
+          }
+        }
+      }
+      
+      if (hasNearbyEnemies) {
+        deployBluBots();
+        player.abilityCooldown = 180; // 3 seconds cooldown
+      }
+    }
+    
     updatePuddles();
     updateProjectiles();
     if (boss && boss.hp <= 0) {
