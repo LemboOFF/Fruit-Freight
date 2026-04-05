@@ -15,12 +15,37 @@ ctx.scale(scale, scale);
 
 let gameState = "select";
 
+// Audio
+const mainMenuSound = new Audio("assets/sounds/main-menu-sound.ogg");
+const tomatoSplatSound = new Audio("assets/sounds/tomato-splat.ogg");
+mainMenuSound.loop = true;
+mainMenuSound.volume = 1;
+
+function playMainMenu() {
+  mainMenuSound.currentTime = 0;
+  mainMenuSound.play();
+}
+
+function fadeOutMainMenu() {
+  const fadeInterval = setInterval(() => {
+    if (mainMenuSound.volume > 0.05) {
+      mainMenuSound.volume -= 0.05;
+    } else {
+      mainMenuSound.pause();
+      mainMenuSound.volume = 0;
+      clearInterval(fadeInterval);
+    }
+  }, 50);
+}
+
+// Images
 const heartImg = new Image();
 const heartEmptyImg = new Image();
 const heartHalfImg = new Image();
 const damageImg = new Image();
 const speedImg = new Image();
 const markingImg = new Image();
+const tomatoPuddleImg = new Image();
 
 heartImg.src = "assets/sprites/heart-sprite.png";
 heartEmptyImg.src = "assets/sprites/heart-empty-sprite.png";
@@ -28,6 +53,11 @@ heartHalfImg.src = "assets/sprites/heart-half-sprite.png";
 damageImg.src = "assets/sprites/damage-sprite.png";
 speedImg.src = "assets/sprites/speed-sprite.png";
 markingImg.src = "assets/sprites/marking-sprite.png";
+tomatoPuddleImg.src = "assets/sprites/tomato-puddle.png";
+
+const PUDDLE_DURATION = 300;
+const PUDDLE_COOLDOWN = 480;
+const BUFF_DURATION = 150;
 
 const characters = [
   {
@@ -46,7 +76,7 @@ const characters = [
     ability: "Places a puddle that slows enemies and speeds up allies",
     img: new Image(),
     attackImg: new Image(),
-    maxHearts: 4,
+    maxHearts: 3,
     damage: 15,
     speed: 2,
     damageLevel: 3,
@@ -57,7 +87,7 @@ const characters = [
     ability: "Places a peel that damages enemies and minions",
     img: new Image(),
     attackImg: new Image(),
-    maxHearts: 4,
+    maxHearts: 3,
     damage: 5,
     speed: 6,
     damageLevel: 1,
@@ -89,6 +119,7 @@ let player = null;
 let boss = null;
 let minions = [];
 let projectiles = [];
+let puddles = [];
 let spawnTimer = 0;
 
 const SPAWN_INTERVAL = 480;
@@ -103,13 +134,19 @@ function createPlayer(charIndex) {
     y: 800,
     width: 32,
     height: 32,
+    baseSpeed: char.speed,
     speed: char.speed,
     damage: char.damage,
     charIndex: charIndex,
     halfHearts: char.maxHearts * 2,
     maxHalfHearts: char.maxHearts * 2,
     damageCooldown: 0,
-    attackCooldown: 0
+    attackCooldown: 0,
+    abilityCooldown: 0,
+    speedBuffTimer: 0,   // positive = buff, negative = debuff (use separate)
+    speedBuff: false,
+    speedDebuff: false,
+    speedEffectTimer: 0
   };
 }
 
@@ -135,13 +172,45 @@ function spawnFries() {
       height: 32,
       hp: 20,
       maxHp: 20,
+      baseSpeed: 0.6,
       speed: 0.6,
       dx: (Math.random() - 0.5) * 2,
       dy: (Math.random() - 0.5) * 2,
       damageCooldown: 0,
-      facingLeft: false
+      facingLeft: false,
+      inPuddle: false,
+      speedDebuffTimer: 0
     });
   }
+}
+
+function placePuddle() {
+  tomatoSplatSound.currentTime = 0;
+  tomatoSplatSound.play();
+  puddles.push({
+    x: player.x + player.width / 2 - 25,
+    y: player.y + player.height / 2 - 25,
+    width: 50,
+    height: 50,
+    effectiveY: 26, // interaction starts at y+26
+    timer: PUDDLE_DURATION
+  });
+}
+
+function isInPuddle(entity, puddle) {
+  const ex = entity.x;
+  const ey = entity.y;
+  const ew = entity.width;
+  const eh = entity.height;
+  const px = puddle.x;
+  const py = puddle.y + puddle.effectiveY;
+  const pw = puddle.width;
+  const ph = puddle.height - puddle.effectiveY;
+
+  return ex < px + pw &&
+         ex + ew > px &&
+         ey < py + ph &&
+         ey + eh > py;
 }
 
 function fireProjectile(dirX, dirY) {
@@ -159,10 +228,16 @@ function fireProjectile(dirX, dirY) {
 }
 
 const keys = {};
+let menuStarted = false;
+
 document.addEventListener("keydown", e => {
   keys[e.key] = true;
 
   if (gameState === "select") {
+    if (!menuStarted) {
+      playMainMenu();
+      menuStarted = true;
+    }
     if (e.key === "ArrowLeft") {
       selectedIndex = (selectedIndex - 1 + characters.length) % characters.length;
       targetOffset = selectedIndex * 200;
@@ -173,11 +248,23 @@ document.addEventListener("keydown", e => {
     }
     if (e.key === "Enter") startGame();
   }
+
+  if (gameState === "playing") {
+    if (e.key === " " && player.charIndex === 1 && player.abilityCooldown === 0) {
+      placePuddle();
+      player.abilityCooldown = PUDDLE_COOLDOWN;
+    }
+  }
 });
 document.addEventListener("keyup", e => keys[e.key] = false);
 
 canvas.addEventListener("click", e => {
   if (gameState !== "select") return;
+
+  if (!menuStarted) {
+    playMainMenu();
+    menuStarted = true;
+  }
 
   const rect = canvas.getBoundingClientRect();
   const mx = (e.clientX - rect.left) / scale;
@@ -191,14 +278,16 @@ canvas.addEventListener("click", e => {
     selectedIndex = (selectedIndex + 1) % characters.length;
     targetOffset = selectedIndex * 200;
   }
-  if (mx >= 175 && mx <= 325 && my >= 370 && my <= 410) startGame();
+  if (mx >= 175 && mx <= 325 && my >= 420 && my <= 460) startGame();
 });
 
 function startGame() {
+  fadeOutMainMenu();
   player = createPlayer(selectedIndex);
   boss = createBoss();
   minions = [];
   projectiles = [];
+  puddles = [];
   spawnTimer = 0;
   gameState = "playing";
 }
@@ -222,6 +311,7 @@ function update() {
   }
 
   if (gameState === "playing") {
+    // Player movement
     if (keys["w"] || keys["W"]) player.y -= player.speed;
     if (keys["s"] || keys["S"]) player.y += player.speed;
     if (keys["a"] || keys["A"]) player.x -= player.speed;
@@ -234,7 +324,33 @@ function update() {
 
     if (player.damageCooldown > 0) player.damageCooldown--;
     if (player.attackCooldown > 0) player.attackCooldown--;
+    if (player.abilityCooldown > 0) player.abilityCooldown--;
 
+    // Speed effect timer
+    if (player.speedEffectTimer > 0) {
+      player.speedEffectTimer--;
+      if (player.speedEffectTimer === 0) {
+        player.speedBuff = false;
+        player.speedDebuff = false;
+        player.speed = player.baseSpeed;
+      }
+    }
+
+    // Check if player is in a puddle
+    let playerInPuddle = false;
+    for (const puddle of puddles) {
+      if (isInPuddle(player, puddle)) {
+        playerInPuddle = true;
+        if (!player.speedBuff) {
+          player.speedBuff = true;
+          player.speedDebuff = false;
+          player.speed = player.baseSpeed + 2; // +1 speed tier
+          player.speedEffectTimer = BUFF_DURATION;
+        }
+      }
+    }
+
+    // Shooting
     if (player.attackCooldown === 0) {
       if (keys["ArrowLeft"])  { fireProjectile(-1, 0); player.attackCooldown = ATTACK_COOLDOWN; }
       if (keys["ArrowRight"]) { fireProjectile(1, 0);  player.attackCooldown = ATTACK_COOLDOWN; }
@@ -242,6 +358,13 @@ function update() {
       if (keys["ArrowDown"])  { fireProjectile(0, 1);  player.attackCooldown = ATTACK_COOLDOWN; }
     }
 
+    // Update puddles
+    puddles = puddles.filter(p => p.timer > 0);
+    for (const puddle of puddles) {
+      puddle.timer--;
+    }
+
+    // Update projectiles
     projectiles = projectiles.filter(p =>
       p.x > 0 && p.x < MAP_WIDTH && p.y > 0 && p.y < MAP_HEIGHT
     );
@@ -267,18 +390,33 @@ function update() {
       }
     }
 
+    // Spawn fries
     spawnTimer++;
     if (spawnTimer >= SPAWN_INTERVAL) {
       spawnFries();
       spawnTimer = 0;
     }
 
+    // Update fries
     minions = minions.filter(fry => fry.hp > 0);
     for (const fry of minions) {
       if (fry.damageCooldown > 0) fry.damageCooldown--;
+      if (fry.speedDebuffTimer > 0) {
+        fry.speedDebuffTimer--;
+        if (fry.speedDebuffTimer === 0) {
+          fry.speed = fry.baseSpeed;
+        }
+      }
+
+      // Check if fry is in puddle
+      for (const puddle of puddles) {
+        if (isInPuddle(fry, puddle) && fry.speed === fry.baseSpeed) {
+          fry.speed = Math.max(0.1, fry.baseSpeed - 2);
+          fry.speedDebuffTimer = BUFF_DURATION;
+        }
+      }
 
       const d = distEntities(fry, player);
-
       if (d < CHASE_RANGE) {
         const angle = Math.atan2(
           (player.y + player.height / 2) - (fry.y + fry.height / 2),
@@ -334,7 +472,6 @@ function drawHearts() {
   for (let i = 0; i < maxHearts; i++) {
     const x = startX + i * (size + gap);
     const filledHalves = player.halfHearts - i * 2;
-
     if (filledHalves >= 2) {
       ctx.drawImage(heartImg, x, startY, size, size);
     } else if (filledHalves === 1) {
@@ -343,6 +480,29 @@ function drawHearts() {
       ctx.drawImage(heartEmptyImg, x, startY, size, size);
     }
   }
+}
+
+function drawSpeedEffect() {
+  if (!player.speedBuff && !player.speedDebuff) return;
+
+  const maxHearts = characters[player.charIndex].maxHearts;
+  const heartsWidth = maxHearts * (20 + 4);
+  const x = 10 + heartsWidth + 4;
+  const y = 10;
+
+  ctx.save();
+  if (player.speedBuff) {
+    ctx.globalCompositeOperation = "source-over";
+    ctx.drawImage(speedImg, x, y, 20, 20);
+    // green tint overlay
+    ctx.fillStyle = "rgba(0, 255, 0, 0.4)";
+    ctx.fillRect(x, y, 20, 20);
+  } else if (player.speedDebuff) {
+    ctx.drawImage(speedImg, x, y, 20, 20);
+    ctx.fillStyle = "rgba(255, 0, 0, 0.4)";
+    ctx.fillRect(x, y, 20, 20);
+  }
+  ctx.restore();
 }
 
 function drawStats() {
@@ -503,6 +663,12 @@ function drawGame() {
     ctx.drawImage(mapImg, cam.x, cam.y, VIEW_W, VIEW_H, 0, 0, VIEW_W, VIEW_H);
   }
 
+  // Draw puddles
+  for (const puddle of puddles) {
+    ctx.drawImage(tomatoPuddleImg, puddle.x - cam.x, puddle.y - cam.y, puddle.width, puddle.height);
+  }
+
+  // Draw boss
   ctx.drawImage(potatoImg, boss.x - cam.x, boss.y - cam.y, boss.width, boss.height);
   drawHPBar(boss.x - cam.x, boss.y - cam.y - 12, boss.width, boss.hp, boss.maxHp, "#ff4444");
   ctx.fillStyle = "#ffffff";
@@ -510,20 +676,35 @@ function drawGame() {
   ctx.textAlign = "center";
   ctx.fillText("Potato", boss.x - cam.x + boss.width / 2, boss.y - cam.y - 16);
 
+  // Draw fries
   for (const fry of minions) {
     drawImageFlipped(fryImg, fry.x - cam.x, fry.y - cam.y, fry.width, fry.height, fry.facingLeft);
     drawHPBar(fry.x - cam.x, fry.y - cam.y - 8, fry.width, fry.hp, fry.maxHp, "#ffaa00");
   }
 
+  // Draw projectiles
   for (const p of projectiles) {
     ctx.drawImage(p.img, p.x - cam.x, p.y - cam.y, p.width, p.height);
   }
 
+  // Draw player
   const char = characters[player.charIndex];
   ctx.drawImage(char.img, player.x - cam.x, player.y - cam.y, player.width, player.height);
 
+  // HUD
   drawHearts();
+  drawSpeedEffect();
 
+  // Ability cooldown indicator
+  if (player.charIndex === 1) {
+    const cooldownPct = player.abilityCooldown / PUDDLE_COOLDOWN;
+    ctx.fillStyle = cooldownPct > 0 ? "#888888" : "#44ff44";
+    ctx.font = "11px sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText(cooldownPct > 0 ? `Puddle: ${Math.ceil(player.abilityCooldown / 60)}s` : "Puddle: Ready!", 10, 40);
+  }
+
+  // Boss HP bar top right
   ctx.fillStyle = "#ffffff";
   ctx.font = "bold 13px sans-serif";
   ctx.textAlign = "right";
@@ -569,7 +750,7 @@ function gameLoop() {
 }
 
 let imgsLoaded = 0;
-const totalImgs = 15;
+const totalImgs = 16;
 
 function onImgLoad() {
   imgsLoaded++;
@@ -585,6 +766,7 @@ heartHalfImg.onload = onImgLoad;
 damageImg.onload = onImgLoad;
 speedImg.onload = onImgLoad;
 markingImg.onload = onImgLoad;
+tomatoPuddleImg.onload = onImgLoad;
 characters[0].img.onload = onImgLoad;
 characters[1].img.onload = onImgLoad;
 characters[2].img.onload = onImgLoad;
