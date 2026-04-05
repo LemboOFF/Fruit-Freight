@@ -37,7 +37,7 @@ const cucumberAttackImg = new Image();
 cucumberAttackImg.src = "assets/sprites/cucumber-attack.png";
 
 const jalapenoImg = new Image();
-jalapenoImg.src = "assets/sprites/bosses/jalapeno-boss.png";
+jalapenoImg.src = "assets/sprites/bosses/jalapenoboss3.png";
 
 const jalapenoAttackImg = new Image();
 jalapenoAttackImg.src = "assets/sprites/jalapeno-attack.png";
