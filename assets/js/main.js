@@ -6,6 +6,10 @@ canvas.width = VIEW_W * scale;
 canvas.height = VIEW_H * scale;
 ctx.scale(scale, scale);
 
+// Enable image smoothing for better quality
+ctx.imageSmoothingEnabled = true;
+ctx.imageSmoothingQuality = 'high';
+
 let gameState = "select";
 let selectedIndex = 0;
 let carouselOffset = 0;

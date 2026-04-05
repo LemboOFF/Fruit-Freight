@@ -1,5 +1,5 @@
 const SPAWN_INTERVAL = 480;
-const CHASE_RANGE = 150;
+const CHASE_RANGE = 300;
 const FRY_DAMAGE_COOLDOWN = 120; // 2 seconds hit immunity
 
 function spawnFries() {

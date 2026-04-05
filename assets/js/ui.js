@@ -1,5 +1,5 @@
 function drawHPBar(x, y, width, current, max, color) {
-  const barH = 6;
+  const barH = 10;
   ctx.fillStyle = "#333333";
   ctx.fillRect(x, y, width, barH);
   ctx.fillStyle = color;

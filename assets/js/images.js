@@ -15,38 +15,55 @@ const bluBotImg = new Image();
 const brokenBluBotImg = new Image();
 
 heartImg.src = "assets/sprites/heart-sprite.png";
+heartImg.onerror = onImgLoad;
 heartEmptyImg.src = "assets/sprites/heart-empty-sprite.png";
+heartEmptyImg.onerror = onImgLoad;
 heartHalfImg.src = "assets/sprites/heart-half-sprite.png";
+heartHalfImg.onerror = onImgLoad;
 damageImg.src = "assets/sprites/damage-sprite.png";
+damageImg.onerror = onImgLoad;
 speedImg.src = "assets/sprites/speed-sprite.png";
+speedImg.onerror = onImgLoad;
 markingImg.src = "assets/sprites/marking-sprite.png";
+markingImg.onerror = onImgLoad;
 tomatoPuddleImg.src = "assets/sprites/tomato-puddle.png";
+tomatoPuddleImg.onerror = onImgLoad;
 bluBotImg.src = "assets/sprites/blubot.png";
+bluBotImg.onerror = onImgLoad;
 brokenBluBotImg.src = "assets/sprites/blubot-broken.png";
+brokenBluBotImg.onerror = onImgLoad;
 
 const mapImg = new Image();
 mapImg.src = "assets/sprites/mapsprite.png";
+mapImg.onerror = onImgLoad;
 
 const potatoImg = new Image();
 potatoImg.src = "assets/sprites/bosses/potatoboss1.png";
+potatoImg.onerror = onImgLoad;
 
 const cucumberImg = new Image();
 cucumberImg.src = "assets/sprites/bosses/cucumberboss2.png";
+cucumberImg.onerror = onImgLoad;
 
 const cucumberAttackImg = new Image();
 cucumberAttackImg.src = "assets/sprites/cucumber-attack.png";
+cucumberAttackImg.onerror = onImgLoad;
 
 const jalapenoImg = new Image();
 jalapenoImg.src = "assets/sprites/bosses/jalapenoboss3.png";
+jalapenoImg.onerror = onImgLoad;
 
 const jalapenoAttackImg = new Image();
 jalapenoAttackImg.src = "assets/sprites/jalapeno-attack.png";
+jalapenoAttackImg.onerror = onImgLoad;
 
 const jalapenoMinionImg = new Image();
 jalapenoMinionImg.src = "assets/sprites/bosses/minions/jalapeno-minion.png";
+jalapenoMinionImg.onerror = onImgLoad;
 
 const fryImg = new Image();
 fryImg.src = "assets/sprites/bosses/minions/fry-minion.png";
+fryImg.onerror = onImgLoad;
 
 const characters = [
   {
@@ -96,13 +113,21 @@ const characters = [
 ];
 
 characters[0].img.src = "assets/sprites/blueberry.png";
+characters[0].img.onerror = onImgLoad;
 characters[1].img.src = "assets/sprites/tomato.png";
+characters[1].img.onerror = onImgLoad;
 characters[2].img.src = "assets/sprites/banana.png";
+characters[2].img.onerror = onImgLoad;
 characters[3].img.src = "assets/sprites/robo-berry.png";
+characters[3].img.onerror = onImgLoad;
 characters[0].attackImg.src = "assets/sprites/blueberry-attack.png";
+characters[0].attackImg.onerror = onImgLoad;
 characters[1].attackImg.src = "assets/sprites/tomato-attack.png";
+characters[1].attackImg.onerror = onImgLoad;
 characters[2].attackImg.src = "assets/sprites/banana-attack.png";
+characters[2].attackImg.onerror = onImgLoad;
 characters[3].attackImg.src = "assets/sprites/blueberry-attack.png";
+characters[3].attackImg.onerror = onImgLoad;
 
 let imgsLoaded = 0;
 const totalImgs = 25;
