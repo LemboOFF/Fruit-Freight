@@ -19,23 +19,17 @@ const characters = [
   {
     name: "Blueberry",
     ability: "Heals near allies or slowly in Mushy Mode",
-    color: null,
     img: new Image(),
-    useImg: true
   },
   {
     name: "Tomato",
     ability: "Places a puddle that slows enemies and speeds up allies",
-    color: null,
     img: new Image(),
-    useImg: true
   },
   {
     name: "Banana",
     ability: "Places a peel that damages enemies and minions",
-    color: null,
     img: new Image(),
-    useImg: true
   }
 ];
 
@@ -43,14 +37,26 @@ characters[0].img.src = "assets/sprites/blueberry.png";
 characters[1].img.src = "assets/sprites/tomato.png";
 characters[2].img.src = "assets/sprites/banana.png";
 
+const mapImg = new Image();
+mapImg.src = "assets/sprites/mapsprite.png";
+
+const potatoImg = new Image();
+potatoImg.src = "assets/sprites/bosses/potatoboss1.png";
+
+const fryImg = new Image();
+fryImg.src = "assets/sprites/bosses/minions/fry-minion.png";
+
 let selectedIndex = 0;
 let carouselOffset = 0;
 let targetOffset = 0;
 
-const mapImg = new Image();
-mapImg.src = "assets/sprites/mapsprite.png";
-
 let player = null;
+let boss = null;
+let minions = [];
+let spawnTimer = 0;
+const SPAWN_INTERVAL = 180; // spawn 5 fries every 180 frames
+const CHASE_RANGE = 150; // how close before fry chases player
+const FRY_DAMAGE_COOLDOWN = 60; // frames between damage ticks
 
 function createPlayer(charIndex) {
   return {
@@ -59,8 +65,41 @@ function createPlayer(charIndex) {
     width: 32,
     height: 32,
     speed: 4,
-    charIndex: charIndex
+    charIndex: charIndex,
+    hp: 100,
+    maxHp: 100,
+    damageCooldown: 0
   };
+}
+
+function createBoss() {
+  return {
+    x: 500 - 125, // center of map minus half width
+    y: 1040 - 125,
+    width: 250,
+    height: 250,
+    hp: 500,
+    maxHp: 500
+  };
+}
+
+function spawnFries() {
+  for (let i = 0; i < 5; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 60 + Math.random() * 40;
+    minions.push({
+      x: boss.x + boss.width / 2 + Math.cos(angle) * dist,
+      y: boss.y + boss.height / 2 + Math.sin(angle) * dist,
+      width: 32,
+      height: 32,
+      hp: 20,
+      maxHp: 20,
+      speed: 1.5,
+      dx: (Math.random() - 0.5) * 2,
+      dy: (Math.random() - 0.5) * 2,
+      damageCooldown: 0
+    });
+  }
 }
 
 const keys = {};
@@ -107,7 +146,23 @@ canvas.addEventListener("click", e => {
 
 function startGame() {
   player = createPlayer(selectedIndex);
+  boss = createBoss();
+  minions = [];
+  spawnTimer = 0;
   gameState = "playing";
+}
+
+function dist(a, b) {
+  const dx = (a.x + a.width / 2) - (b.x + b.width / 2);
+  const dy = (a.y + a.height / 2) - (b.y + b.height / 2);
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+function isColliding(a, b) {
+  return a.x < b.x + b.width &&
+         a.x + a.width > b.x &&
+         a.y < b.y + b.height &&
+         a.y + a.height > b.y;
 }
 
 function update() {
@@ -116,6 +171,7 @@ function update() {
   }
 
   if (gameState === "playing") {
+    // Player movement
     if (keys["w"] || keys["W"]) player.y -= player.speed;
     if (keys["s"] || keys["S"]) player.y += player.speed;
     if (keys["a"] || keys["A"]) player.x -= player.speed;
@@ -125,6 +181,59 @@ function update() {
     if (player.y + player.height > MAP_HEIGHT) player.y = MAP_HEIGHT - player.height;
     if (player.x < 0) player.x = 0;
     if (player.x + player.width > MAP_WIDTH) player.x = MAP_WIDTH - player.width;
+
+    if (player.damageCooldown > 0) player.damageCooldown--;
+
+    // Spawn fries
+    spawnTimer++;
+    if (spawnTimer >= SPAWN_INTERVAL) {
+      spawnFries();
+      spawnTimer = 0;
+    }
+
+    // Update fries
+    minions = minions.filter(fry => fry.hp > 0);
+    for (const fry of minions) {
+      if (fry.damageCooldown > 0) fry.damageCooldown--;
+
+      const d = dist(fry, player);
+
+      if (d < CHASE_RANGE) {
+        // Chase player
+        const angle = Math.atan2(
+          (player.y + player.height / 2) - (fry.y + fry.height / 2),
+          (player.x + player.width / 2) - (fry.x + fry.width / 2)
+        );
+        fry.dx = Math.cos(angle) * fry.speed;
+        fry.dy = Math.sin(angle) * fry.speed;
+      } else {
+        // Wander randomly, occasionally change direction
+        if (Math.random() < 0.02) {
+          const angle = Math.random() * Math.PI * 2;
+          fry.dx = Math.cos(angle) * fry.speed;
+          fry.dy = Math.sin(angle) * fry.speed;
+        }
+      }
+
+      fry.x += fry.dx;
+      fry.y += fry.dy;
+
+      // Keep fries on ground
+      if (fry.y < GROUND_Y) fry.y = GROUND_Y;
+      if (fry.y + fry.height > MAP_HEIGHT) fry.y = MAP_HEIGHT - fry.height;
+      if (fry.x < 0) fry.x = 0;
+      if (fry.x + fry.width > MAP_WIDTH) fry.x = MAP_WIDTH - fry.width;
+
+      // Fry damages player
+      if (isColliding(fry, player) && player.damageCooldown === 0) {
+        player.hp -= 5;
+        player.damageCooldown = FRY_DAMAGE_COOLDOWN;
+        if (player.hp <= 0) {
+          player.hp = 0;
+          gameState = "gameover";
+        }
+      }
+    }
   }
 }
 
@@ -134,6 +243,17 @@ function getCamera() {
   camX = Math.max(0, Math.min(camX, MAP_WIDTH - VIEW_W));
   camY = Math.max(0, Math.min(camY, MAP_HEIGHT - VIEW_H));
   return { x: camX, y: camY };
+}
+
+function drawHPBar(x, y, width, current, max, color) {
+  const barH = 6;
+  ctx.fillStyle = "#333333";
+  ctx.fillRect(x, y, width, barH);
+  ctx.fillStyle = color;
+  ctx.fillRect(x, y, width * (current / max), barH);
+  ctx.strokeStyle = "#000000";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x, y, width, barH);
 }
 
 function drawSelectScreen() {
@@ -171,12 +291,7 @@ function drawSelectScreen() {
     ctx.fill();
     ctx.stroke();
 
-    if (char.useImg && char.img.complete) {
-      ctx.drawImage(char.img, cardX + 28, cardY + 10, 64, 64);
-    } else if (!char.useImg) {
-      ctx.fillStyle = char.color;
-      ctx.fillRect(cardX + 28, cardY + 10, 64, 64);
-    }
+    ctx.drawImage(char.img, cardX + 28, cardY + 10, 64, 64);
 
     ctx.fillStyle = isSelected ? "#ffffff" : "#aaaaaa";
     ctx.font = isSelected ? "bold 13px sans-serif" : "12px sans-serif";
@@ -247,22 +362,65 @@ function drawGame() {
   const cam = getCamera();
   ctx.clearRect(0, 0, VIEW_W, VIEW_H);
 
+  // Draw map
   if (mapImg.complete) {
     ctx.drawImage(mapImg, cam.x, cam.y, VIEW_W, VIEW_H, 0, 0, VIEW_W, VIEW_H);
   }
 
-  const char = characters[player.charIndex];
-  if (char.useImg && char.img.complete) {
-    ctx.drawImage(char.img, player.x - cam.x, player.y - cam.y, player.width, player.height);
-  } else if (!char.useImg) {
-    ctx.fillStyle = char.color;
-    ctx.fillRect(player.x - cam.x, player.y - cam.y, player.width, player.height);
+  // Draw boss
+  ctx.drawImage(potatoImg, boss.x - cam.x, boss.y - cam.y, boss.width, boss.height);
+  drawHPBar(boss.x - cam.x, boss.y - cam.y - 12, boss.width, boss.hp, boss.maxHp, "#ff4444");
+
+  // Boss name
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 12px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("Potato", boss.x - cam.x + boss.width / 2, boss.y - cam.y - 16);
+
+  // Draw fries
+  for (const fry of minions) {
+    ctx.drawImage(fryImg, fry.x - cam.x, fry.y - cam.y, fry.width, fry.height);
+    drawHPBar(fry.x - cam.x, fry.y - cam.y - 8, fry.width, fry.hp, fry.maxHp, "#ffaa00");
   }
+
+  // Draw player
+  const char = characters[player.charIndex];
+  ctx.drawImage(char.img, player.x - cam.x, player.y - cam.y, player.width, player.height);
+
+  // Player HP bar (top left of screen, always visible)
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 13px sans-serif";
+  ctx.textAlign = "left";
+  ctx.fillText("HP", 10, 22);
+  drawHPBar(35, 10, 150, player.hp, player.maxHp, "#44ff44");
+
+  // Boss HP bar (top right)
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 13px sans-serif";
+  ctx.textAlign = "right";
+  ctx.fillText("Potato", VIEW_W - 10, 22);
+  drawHPBar(VIEW_W - 165, 10, 150, boss.hp, boss.maxHp, "#ff4444");
+}
+
+function drawGameOver() {
+  ctx.fillStyle = "rgba(0,0,0,0.7)";
+  ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 48px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("Game Over", VIEW_W / 2, VIEW_H / 2 - 20);
+  ctx.font = "18px sans-serif";
+  ctx.fillStyle = "#aaaaaa";
+  ctx.fillText("Refresh to try again", VIEW_W / 2, VIEW_H / 2 + 20);
 }
 
 function draw() {
   if (gameState === "select") drawSelectScreen();
   if (gameState === "playing") drawGame();
+  if (gameState === "gameover") {
+    drawGame();
+    drawGameOver();
+  }
 }
 
 function gameLoop() {
@@ -271,4 +429,17 @@ function gameLoop() {
   requestAnimationFrame(gameLoop);
 }
 
-gameLoop();
+let imgsLoaded = 0;
+const totalImgs = 6;
+
+function onImgLoad() {
+  imgsLoaded++;
+  if (imgsLoaded >= totalImgs) gameLoop();
+}
+
+mapImg.onload = onImgLoad;
+potatoImg.onload = onImgLoad;
+fryImg.onload = onImgLoad;
+characters[0].img.onload = onImgLoad;
+characters[1].img.onload = onImgLoad;
+characters[2].img.onload = onImgLoad;
