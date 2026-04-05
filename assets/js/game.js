@@ -15,24 +15,53 @@ ctx.scale(scale, scale);
 
 let gameState = "select";
 
+const heartImg = new Image();
+const heartEmptyImg = new Image();
+const heartHalfImg = new Image();
+const damageImg = new Image();
+const speedImg = new Image();
+const markingImg = new Image();
+
+heartImg.src = "assets/sprites/heart-sprite.png";
+heartEmptyImg.src = "assets/sprites/heart-empty-sprite.png";
+heartHalfImg.src = "assets/sprites/heart-half-sprite.png";
+damageImg.src = "assets/sprites/damage-sprite.png";
+speedImg.src = "assets/sprites/speed-sprite.png";
+markingImg.src = "assets/sprites/marking-sprite.png";
+
 const characters = [
   {
     name: "Blueberry",
     ability: "Heals near allies or slowly in Mushy Mode",
     img: new Image(),
-    attackImg: new Image()
+    attackImg: new Image(),
+    maxHearts: 4,
+    damage: 5,
+    speed: 4,
+    damageLevel: 1,
+    speedLevel: 2,
   },
   {
     name: "Tomato",
     ability: "Places a puddle that slows enemies and speeds up allies",
     img: new Image(),
-    attackImg: new Image()
+    attackImg: new Image(),
+    maxHearts: 4,
+    damage: 15,
+    speed: 2,
+    damageLevel: 3,
+    speedLevel: 1,
   },
   {
     name: "Banana",
     ability: "Places a peel that damages enemies and minions",
     img: new Image(),
-    attackImg: new Image()
+    attackImg: new Image(),
+    maxHearts: 4,
+    damage: 5,
+    speed: 6,
+    damageLevel: 1,
+    speedLevel: 3,
   }
 ];
 
@@ -61,21 +90,24 @@ let boss = null;
 let minions = [];
 let projectiles = [];
 let spawnTimer = 0;
-const SPAWN_INTERVAL = 180;
+
+const SPAWN_INTERVAL = 480;
 const CHASE_RANGE = 150;
 const FRY_DAMAGE_COOLDOWN = 60;
-const ATTACK_COOLDOWN = 30; // 0.5 seconds at 60fps
+const ATTACK_COOLDOWN = 30;
 
 function createPlayer(charIndex) {
+  const char = characters[charIndex];
   return {
     x: 500,
     y: 800,
     width: 32,
     height: 32,
-    speed: 4,
+    speed: char.speed,
+    damage: char.damage,
     charIndex: charIndex,
-    hp: 100,
-    maxHp: 100,
+    halfHearts: char.maxHearts * 2,
+    maxHalfHearts: char.maxHearts * 2,
     damageCooldown: 0,
     attackCooldown: 0
   };
@@ -87,8 +119,8 @@ function createBoss() {
     y: 1040 - 125,
     width: 250,
     height: 250,
-    hp: 500,
-    maxHp: 500
+    hp: 300,
+    maxHp: 300
   };
 }
 
@@ -103,7 +135,7 @@ function spawnFries() {
       height: 32,
       hp: 20,
       maxHp: 20,
-      speed: 1.5,
+      speed: 0.6,
       dx: (Math.random() - 0.5) * 2,
       dy: (Math.random() - 0.5) * 2,
       damageCooldown: 0,
@@ -113,15 +145,16 @@ function spawnFries() {
 }
 
 function fireProjectile(dirX, dirY) {
-  const attackImg = characters[player.charIndex].attackImg;
+  const char = characters[player.charIndex];
   projectiles.push({
     x: player.x + player.width / 2 - 8,
     y: player.y + player.height / 2 - 8,
     width: 16,
     height: 16,
-    dx: dirX * 6,
-    dy: dirY * 6,
-    img: attackImg
+    dx: dirX * 8,
+    dy: dirY * 8,
+    img: char.attackImg,
+    damage: player.damage
   });
 }
 
@@ -170,7 +203,7 @@ function startGame() {
   gameState = "playing";
 }
 
-function dist(a, b) {
+function distEntities(a, b) {
   const dx = (a.x + a.width / 2) - (b.x + b.width / 2);
   const dy = (a.y + a.height / 2) - (b.y + b.height / 2);
   return Math.sqrt(dx * dx + dy * dy);
@@ -189,7 +222,6 @@ function update() {
   }
 
   if (gameState === "playing") {
-    // Player movement
     if (keys["w"] || keys["W"]) player.y -= player.speed;
     if (keys["s"] || keys["S"]) player.y += player.speed;
     if (keys["a"] || keys["A"]) player.x -= player.speed;
@@ -203,7 +235,6 @@ function update() {
     if (player.damageCooldown > 0) player.damageCooldown--;
     if (player.attackCooldown > 0) player.attackCooldown--;
 
-    // Shooting with arrow keys
     if (player.attackCooldown === 0) {
       if (keys["ArrowLeft"])  { fireProjectile(-1, 0); player.attackCooldown = ATTACK_COOLDOWN; }
       if (keys["ArrowRight"]) { fireProjectile(1, 0);  player.attackCooldown = ATTACK_COOLDOWN; }
@@ -211,7 +242,6 @@ function update() {
       if (keys["ArrowDown"])  { fireProjectile(0, 1);  player.attackCooldown = ATTACK_COOLDOWN; }
     }
 
-    // Update projectiles
     projectiles = projectiles.filter(p =>
       p.x > 0 && p.x < MAP_WIDTH && p.y > 0 && p.y < MAP_HEIGHT
     );
@@ -220,38 +250,34 @@ function update() {
       p.x += p.dx;
       p.y += p.dy;
 
-      // Hit boss
       if (boss && isColliding(p, boss)) {
-        boss.hp -= 10;
-        p.x = -999; // remove projectile
+        boss.hp -= p.damage;
+        p.x = -999;
         if (boss.hp <= 0) {
           boss.hp = 0;
           gameState = "win";
         }
       }
 
-      // Hit fries
       for (const fry of minions) {
         if (isColliding(p, fry)) {
-          fry.hp -= 10;
+          fry.hp -= p.damage;
           p.x = -999;
         }
       }
     }
 
-    // Spawn fries
     spawnTimer++;
     if (spawnTimer >= SPAWN_INTERVAL) {
       spawnFries();
       spawnTimer = 0;
     }
 
-    // Update fries
     minions = minions.filter(fry => fry.hp > 0);
     for (const fry of minions) {
       if (fry.damageCooldown > 0) fry.damageCooldown--;
 
-      const d = dist(fry, player);
+      const d = distEntities(fry, player);
 
       if (d < CHASE_RANGE) {
         const angle = Math.atan2(
@@ -268,7 +294,6 @@ function update() {
         }
       }
 
-      // Flip based on player position
       fry.facingLeft = (player.x + player.width / 2) < (fry.x + fry.width / 2);
 
       fry.x += fry.dx;
@@ -280,10 +305,10 @@ function update() {
       if (fry.x + fry.width > MAP_WIDTH) fry.x = MAP_WIDTH - fry.width;
 
       if (isColliding(fry, player) && player.damageCooldown === 0) {
-        player.hp -= 5;
+        player.halfHearts -= 1;
         player.damageCooldown = FRY_DAMAGE_COOLDOWN;
-        if (player.hp <= 0) {
-          player.hp = 0;
+        if (player.halfHearts <= 0) {
+          player.halfHearts = 0;
           gameState = "gameover";
         }
       }
@@ -299,15 +324,49 @@ function getCamera() {
   return { x: camX, y: camY };
 }
 
-function drawHPBar(x, y, width, current, max, color) {
-  const barH = 6;
-  ctx.fillStyle = "#333333";
-  ctx.fillRect(x, y, width, barH);
-  ctx.fillStyle = color;
-  ctx.fillRect(x, y, width * (current / max), barH);
-  ctx.strokeStyle = "#000000";
-  ctx.lineWidth = 1;
-  ctx.strokeRect(x, y, width, barH);
+function drawHearts() {
+  const startX = 10;
+  const startY = 10;
+  const size = 20;
+  const gap = 4;
+  const maxHearts = characters[player.charIndex].maxHearts;
+
+  for (let i = 0; i < maxHearts; i++) {
+    const x = startX + i * (size + gap);
+    const filledHalves = player.halfHearts - i * 2;
+
+    if (filledHalves >= 2) {
+      ctx.drawImage(heartImg, x, startY, size, size);
+    } else if (filledHalves === 1) {
+      ctx.drawImage(heartHalfImg, x, startY, size, size);
+    } else {
+      ctx.drawImage(heartEmptyImg, x, startY, size, size);
+    }
+  }
+}
+
+function drawStats() {
+  const char = characters[selectedIndex];
+  const startX = VIEW_W / 2 - 80;
+  const startY = 345;
+  const iconSize = 16;
+  const markSize = 8;
+  const gap = 4;
+
+  ctx.drawImage(heartImg, startX, startY, iconSize, iconSize);
+  for (let i = 0; i < char.maxHearts; i++) {
+    ctx.drawImage(markingImg, startX + iconSize + gap + i * (markSize + 2), startY + 4, markSize, markSize);
+  }
+
+  ctx.drawImage(damageImg, startX, startY + iconSize + gap, iconSize, iconSize);
+  for (let i = 0; i < char.damageLevel; i++) {
+    ctx.drawImage(markingImg, startX + iconSize + gap + i * (markSize + 2), startY + iconSize + gap + 4, markSize, markSize);
+  }
+
+  ctx.drawImage(speedImg, startX, startY + (iconSize + gap) * 2, iconSize, iconSize);
+  for (let i = 0; i < char.speedLevel; i++) {
+    ctx.drawImage(markingImg, startX + iconSize + gap + i * (markSize + 2), startY + (iconSize + gap) * 2 + 4, markSize, markSize);
+  }
 }
 
 function drawImageFlipped(img, x, y, w, h, flipped) {
@@ -319,6 +378,17 @@ function drawImageFlipped(img, x, y, w, h, flipped) {
     ctx.drawImage(img, x, y, w, h);
   }
   ctx.restore();
+}
+
+function drawHPBar(x, y, width, current, max, color) {
+  const barH = 6;
+  ctx.fillStyle = "#333333";
+  ctx.fillRect(x, y, width, barH);
+  ctx.fillStyle = color;
+  ctx.fillRect(x, y, width * (current / max), barH);
+  ctx.strokeStyle = "#000000";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x, y, width, barH);
 }
 
 function drawSelectScreen() {
@@ -371,24 +441,26 @@ function drawSelectScreen() {
   ctx.fillStyle = "#cccccc";
   ctx.font = "13px sans-serif";
   ctx.textAlign = "center";
-  wrapText(ctx, char.ability, VIEW_W / 2, 310, 300, 20);
+  wrapText(ctx, char.ability, VIEW_W / 2, 295, 300, 20);
+
+  drawStats();
 
   ctx.fillStyle = "#3a3aaa";
   ctx.strokeStyle = "#ffffff";
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.roundRect(175, 370, 150, 40, 8);
+  ctx.roundRect(175, 420, 150, 40, 8);
   ctx.fill();
   ctx.stroke();
 
   ctx.fillStyle = "#ffffff";
   ctx.font = "bold 16px sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText("Play!", VIEW_W / 2, 396);
+  ctx.fillText("Play!", VIEW_W / 2, 446);
 
   ctx.font = "12px sans-serif";
   ctx.fillStyle = "#888888";
-  ctx.fillText("← → to browse  |  Enter to confirm", VIEW_W / 2, 450);
+  ctx.fillText("← → to browse  |  Enter to confirm", VIEW_W / 2, 480);
 }
 
 function drawArrow(x, y, dir) {
@@ -431,7 +503,6 @@ function drawGame() {
     ctx.drawImage(mapImg, cam.x, cam.y, VIEW_W, VIEW_H, 0, 0, VIEW_W, VIEW_H);
   }
 
-  // Draw boss
   ctx.drawImage(potatoImg, boss.x - cam.x, boss.y - cam.y, boss.width, boss.height);
   drawHPBar(boss.x - cam.x, boss.y - cam.y - 12, boss.width, boss.hp, boss.maxHp, "#ff4444");
   ctx.fillStyle = "#ffffff";
@@ -439,29 +510,20 @@ function drawGame() {
   ctx.textAlign = "center";
   ctx.fillText("Potato", boss.x - cam.x + boss.width / 2, boss.y - cam.y - 16);
 
-  // Draw fries
   for (const fry of minions) {
     drawImageFlipped(fryImg, fry.x - cam.x, fry.y - cam.y, fry.width, fry.height, fry.facingLeft);
     drawHPBar(fry.x - cam.x, fry.y - cam.y - 8, fry.width, fry.hp, fry.maxHp, "#ffaa00");
   }
 
-  // Draw projectiles
   for (const p of projectiles) {
     ctx.drawImage(p.img, p.x - cam.x, p.y - cam.y, p.width, p.height);
   }
 
-  // Draw player
   const char = characters[player.charIndex];
   ctx.drawImage(char.img, player.x - cam.x, player.y - cam.y, player.width, player.height);
 
-  // Player HP bar
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 13px sans-serif";
-  ctx.textAlign = "left";
-  ctx.fillText("HP", 10, 22);
-  drawHPBar(35, 10, 150, player.hp, player.maxHp, "#44ff44");
+  drawHearts();
 
-  // Boss HP bar
   ctx.fillStyle = "#ffffff";
   ctx.font = "bold 13px sans-serif";
   ctx.textAlign = "right";
@@ -507,7 +569,7 @@ function gameLoop() {
 }
 
 let imgsLoaded = 0;
-const totalImgs = 9;
+const totalImgs = 15;
 
 function onImgLoad() {
   imgsLoaded++;
@@ -517,6 +579,12 @@ function onImgLoad() {
 mapImg.onload = onImgLoad;
 potatoImg.onload = onImgLoad;
 fryImg.onload = onImgLoad;
+heartImg.onload = onImgLoad;
+heartEmptyImg.onload = onImgLoad;
+heartHalfImg.onload = onImgLoad;
+damageImg.onload = onImgLoad;
+speedImg.onload = onImgLoad;
+markingImg.onload = onImgLoad;
 characters[0].img.onload = onImgLoad;
 characters[1].img.onload = onImgLoad;
 characters[2].img.onload = onImgLoad;
