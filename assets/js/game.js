@@ -20,22 +20,28 @@ const characters = [
     name: "Blueberry",
     ability: "Heals near allies or slowly in Mushy Mode",
     img: new Image(),
+    attackImg: new Image()
   },
   {
     name: "Tomato",
     ability: "Places a puddle that slows enemies and speeds up allies",
     img: new Image(),
+    attackImg: new Image()
   },
   {
     name: "Banana",
     ability: "Places a peel that damages enemies and minions",
     img: new Image(),
+    attackImg: new Image()
   }
 ];
 
 characters[0].img.src = "assets/sprites/blueberry.png";
 characters[1].img.src = "assets/sprites/tomato.png";
 characters[2].img.src = "assets/sprites/banana.png";
+characters[0].attackImg.src = "assets/sprites/blueberry-attack.png";
+characters[1].attackImg.src = "assets/sprites/tomato-attack.png";
+characters[2].attackImg.src = "assets/sprites/banana-attack.png";
 
 const mapImg = new Image();
 mapImg.src = "assets/sprites/mapsprite.png";
@@ -53,10 +59,12 @@ let targetOffset = 0;
 let player = null;
 let boss = null;
 let minions = [];
+let projectiles = [];
 let spawnTimer = 0;
-const SPAWN_INTERVAL = 180; // spawn 5 fries every 180 frames
-const CHASE_RANGE = 150; // how close before fry chases player
-const FRY_DAMAGE_COOLDOWN = 60; // frames between damage ticks
+const SPAWN_INTERVAL = 180;
+const CHASE_RANGE = 150;
+const FRY_DAMAGE_COOLDOWN = 60;
+const ATTACK_COOLDOWN = 30; // 0.5 seconds at 60fps
 
 function createPlayer(charIndex) {
   return {
@@ -68,13 +76,14 @@ function createPlayer(charIndex) {
     charIndex: charIndex,
     hp: 100,
     maxHp: 100,
-    damageCooldown: 0
+    damageCooldown: 0,
+    attackCooldown: 0
   };
 }
 
 function createBoss() {
   return {
-    x: 500 - 125, // center of map minus half width
+    x: 500 - 125,
     y: 1040 - 125,
     width: 250,
     height: 250,
@@ -86,10 +95,10 @@ function createBoss() {
 function spawnFries() {
   for (let i = 0; i < 5; i++) {
     const angle = Math.random() * Math.PI * 2;
-    const dist = 60 + Math.random() * 40;
+    const dist2 = 60 + Math.random() * 40;
     minions.push({
-      x: boss.x + boss.width / 2 + Math.cos(angle) * dist,
-      y: boss.y + boss.height / 2 + Math.sin(angle) * dist,
+      x: boss.x + boss.width / 2 + Math.cos(angle) * dist2,
+      y: boss.y + boss.height / 2 + Math.sin(angle) * dist2,
       width: 32,
       height: 32,
       hp: 20,
@@ -97,9 +106,23 @@ function spawnFries() {
       speed: 1.5,
       dx: (Math.random() - 0.5) * 2,
       dy: (Math.random() - 0.5) * 2,
-      damageCooldown: 0
+      damageCooldown: 0,
+      facingLeft: false
     });
   }
+}
+
+function fireProjectile(dirX, dirY) {
+  const attackImg = characters[player.charIndex].attackImg;
+  projectiles.push({
+    x: player.x + player.width / 2 - 8,
+    y: player.y + player.height / 2 - 8,
+    width: 16,
+    height: 16,
+    dx: dirX * 6,
+    dy: dirY * 6,
+    img: attackImg
+  });
 }
 
 const keys = {};
@@ -115,9 +138,7 @@ document.addEventListener("keydown", e => {
       selectedIndex = (selectedIndex + 1) % characters.length;
       targetOffset = selectedIndex * 200;
     }
-    if (e.key === "Enter") {
-      startGame();
-    }
+    if (e.key === "Enter") startGame();
   }
 });
 document.addEventListener("keyup", e => keys[e.key] = false);
@@ -133,21 +154,18 @@ canvas.addEventListener("click", e => {
     selectedIndex = (selectedIndex - 1 + characters.length) % characters.length;
     targetOffset = selectedIndex * 200;
   }
-
   if (mx >= 380 && mx <= 440 && my >= 170 && my <= 230) {
     selectedIndex = (selectedIndex + 1) % characters.length;
     targetOffset = selectedIndex * 200;
   }
-
-  if (mx >= 175 && mx <= 325 && my >= 370 && my <= 410) {
-    startGame();
-  }
+  if (mx >= 175 && mx <= 325 && my >= 370 && my <= 410) startGame();
 });
 
 function startGame() {
   player = createPlayer(selectedIndex);
   boss = createBoss();
   minions = [];
+  projectiles = [];
   spawnTimer = 0;
   gameState = "playing";
 }
@@ -183,6 +201,43 @@ function update() {
     if (player.x + player.width > MAP_WIDTH) player.x = MAP_WIDTH - player.width;
 
     if (player.damageCooldown > 0) player.damageCooldown--;
+    if (player.attackCooldown > 0) player.attackCooldown--;
+
+    // Shooting with arrow keys
+    if (player.attackCooldown === 0) {
+      if (keys["ArrowLeft"])  { fireProjectile(-1, 0); player.attackCooldown = ATTACK_COOLDOWN; }
+      if (keys["ArrowRight"]) { fireProjectile(1, 0);  player.attackCooldown = ATTACK_COOLDOWN; }
+      if (keys["ArrowUp"])    { fireProjectile(0, -1); player.attackCooldown = ATTACK_COOLDOWN; }
+      if (keys["ArrowDown"])  { fireProjectile(0, 1);  player.attackCooldown = ATTACK_COOLDOWN; }
+    }
+
+    // Update projectiles
+    projectiles = projectiles.filter(p =>
+      p.x > 0 && p.x < MAP_WIDTH && p.y > 0 && p.y < MAP_HEIGHT
+    );
+
+    for (const p of projectiles) {
+      p.x += p.dx;
+      p.y += p.dy;
+
+      // Hit boss
+      if (boss && isColliding(p, boss)) {
+        boss.hp -= 10;
+        p.x = -999; // remove projectile
+        if (boss.hp <= 0) {
+          boss.hp = 0;
+          gameState = "win";
+        }
+      }
+
+      // Hit fries
+      for (const fry of minions) {
+        if (isColliding(p, fry)) {
+          fry.hp -= 10;
+          p.x = -999;
+        }
+      }
+    }
 
     // Spawn fries
     spawnTimer++;
@@ -199,7 +254,6 @@ function update() {
       const d = dist(fry, player);
 
       if (d < CHASE_RANGE) {
-        // Chase player
         const angle = Math.atan2(
           (player.y + player.height / 2) - (fry.y + fry.height / 2),
           (player.x + player.width / 2) - (fry.x + fry.width / 2)
@@ -207,7 +261,6 @@ function update() {
         fry.dx = Math.cos(angle) * fry.speed;
         fry.dy = Math.sin(angle) * fry.speed;
       } else {
-        // Wander randomly, occasionally change direction
         if (Math.random() < 0.02) {
           const angle = Math.random() * Math.PI * 2;
           fry.dx = Math.cos(angle) * fry.speed;
@@ -215,16 +268,17 @@ function update() {
         }
       }
 
+      // Flip based on player position
+      fry.facingLeft = (player.x + player.width / 2) < (fry.x + fry.width / 2);
+
       fry.x += fry.dx;
       fry.y += fry.dy;
 
-      // Keep fries on ground
       if (fry.y < GROUND_Y) fry.y = GROUND_Y;
       if (fry.y + fry.height > MAP_HEIGHT) fry.y = MAP_HEIGHT - fry.height;
       if (fry.x < 0) fry.x = 0;
       if (fry.x + fry.width > MAP_WIDTH) fry.x = MAP_WIDTH - fry.width;
 
-      // Fry damages player
       if (isColliding(fry, player) && player.damageCooldown === 0) {
         player.hp -= 5;
         player.damageCooldown = FRY_DAMAGE_COOLDOWN;
@@ -254,6 +308,17 @@ function drawHPBar(x, y, width, current, max, color) {
   ctx.strokeStyle = "#000000";
   ctx.lineWidth = 1;
   ctx.strokeRect(x, y, width, barH);
+}
+
+function drawImageFlipped(img, x, y, w, h, flipped) {
+  ctx.save();
+  if (flipped) {
+    ctx.scale(-1, 1);
+    ctx.drawImage(img, -x - w, y, w, h);
+  } else {
+    ctx.drawImage(img, x, y, w, h);
+  }
+  ctx.restore();
 }
 
 function drawSelectScreen() {
@@ -362,7 +427,6 @@ function drawGame() {
   const cam = getCamera();
   ctx.clearRect(0, 0, VIEW_W, VIEW_H);
 
-  // Draw map
   if (mapImg.complete) {
     ctx.drawImage(mapImg, cam.x, cam.y, VIEW_W, VIEW_H, 0, 0, VIEW_W, VIEW_H);
   }
@@ -370,8 +434,6 @@ function drawGame() {
   // Draw boss
   ctx.drawImage(potatoImg, boss.x - cam.x, boss.y - cam.y, boss.width, boss.height);
   drawHPBar(boss.x - cam.x, boss.y - cam.y - 12, boss.width, boss.hp, boss.maxHp, "#ff4444");
-
-  // Boss name
   ctx.fillStyle = "#ffffff";
   ctx.font = "bold 12px sans-serif";
   ctx.textAlign = "center";
@@ -379,22 +441,27 @@ function drawGame() {
 
   // Draw fries
   for (const fry of minions) {
-    ctx.drawImage(fryImg, fry.x - cam.x, fry.y - cam.y, fry.width, fry.height);
+    drawImageFlipped(fryImg, fry.x - cam.x, fry.y - cam.y, fry.width, fry.height, fry.facingLeft);
     drawHPBar(fry.x - cam.x, fry.y - cam.y - 8, fry.width, fry.hp, fry.maxHp, "#ffaa00");
+  }
+
+  // Draw projectiles
+  for (const p of projectiles) {
+    ctx.drawImage(p.img, p.x - cam.x, p.y - cam.y, p.width, p.height);
   }
 
   // Draw player
   const char = characters[player.charIndex];
   ctx.drawImage(char.img, player.x - cam.x, player.y - cam.y, player.width, player.height);
 
-  // Player HP bar (top left of screen, always visible)
+  // Player HP bar
   ctx.fillStyle = "#ffffff";
   ctx.font = "bold 13px sans-serif";
   ctx.textAlign = "left";
   ctx.fillText("HP", 10, 22);
   drawHPBar(35, 10, 150, player.hp, player.maxHp, "#44ff44");
 
-  // Boss HP bar (top right)
+  // Boss HP bar
   ctx.fillStyle = "#ffffff";
   ctx.font = "bold 13px sans-serif";
   ctx.textAlign = "right";
@@ -414,13 +481,23 @@ function drawGameOver() {
   ctx.fillText("Refresh to try again", VIEW_W / 2, VIEW_H / 2 + 20);
 }
 
+function drawWin() {
+  ctx.fillStyle = "rgba(0,0,0,0.7)";
+  ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+  ctx.fillStyle = "#ffff44";
+  ctx.font = "bold 48px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("You Win!", VIEW_W / 2, VIEW_H / 2 - 20);
+  ctx.font = "18px sans-serif";
+  ctx.fillStyle = "#aaaaaa";
+  ctx.fillText("Refresh to play again", VIEW_W / 2, VIEW_H / 2 + 20);
+}
+
 function draw() {
   if (gameState === "select") drawSelectScreen();
   if (gameState === "playing") drawGame();
-  if (gameState === "gameover") {
-    drawGame();
-    drawGameOver();
-  }
+  if (gameState === "gameover") { drawGame(); drawGameOver(); }
+  if (gameState === "win") { drawGame(); drawWin(); }
 }
 
 function gameLoop() {
@@ -430,7 +507,7 @@ function gameLoop() {
 }
 
 let imgsLoaded = 0;
-const totalImgs = 6;
+const totalImgs = 9;
 
 function onImgLoad() {
   imgsLoaded++;
@@ -443,3 +520,6 @@ fryImg.onload = onImgLoad;
 characters[0].img.onload = onImgLoad;
 characters[1].img.onload = onImgLoad;
 characters[2].img.onload = onImgLoad;
+characters[0].attackImg.onload = onImgLoad;
+characters[1].attackImg.onload = onImgLoad;
+characters[2].attackImg.onload = onImgLoad;
