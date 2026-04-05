@@ -40,10 +40,10 @@ const jalapenoImg = new Image();
 jalapenoImg.src = "assets/sprites/bosses/jalapenoboss3.png";
 
 const jalapenoAttackImg = new Image();
-// jalapenoAttackImg.src = "assets/sprites/jalapeno-attack.png";
+jalapenoAttackImg.src = "assets/sprites/jalapeno-attack.png";
 
 const jalapenoMinionImg = new Image();
-// jalapenoMinionImg.src = "assets/sprites/jalapeno-minion.png";
+jalapenoMinionImg.src = "assets/sprites/bosses/minions/jalapeno-minion.png";
 
 const fryImg = new Image();
 fryImg.src = "assets/sprites/bosses/minions/fry-minion.png";
@@ -105,7 +105,7 @@ characters[2].attackImg.src = "assets/sprites/banana-attack.png";
 characters[3].attackImg.src = "assets/sprites/blueberry-attack.png";
 
 let imgsLoaded = 0;
-const totalImgs = 22;
+const totalImgs = 25;
 
 // Font loading
 let fontLoaded = false;
@@ -155,4 +155,5 @@ characters[1].attackImg.onload = onImgLoad;
 characters[2].attackImg.onload = onImgLoad;
 characters[3].attackImg.onload = onImgLoad;
 jalapenoImg.onload = onImgLoad;
-// jalapenoAttackImg and jalapenoMinionImg disabled - no src
+jalapenoAttackImg.onload = onImgLoad;
+jalapenoMinionImg.onload = onImgLoad;
