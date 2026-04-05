@@ -4,8 +4,8 @@ function createBoss() {
     y: 1040 - 125,
     width: 250,
     height: 250,
-    hp: 300,
-    maxHp: 300
+    hp: 1000,
+    maxHp: 1000
   };
 }
 
