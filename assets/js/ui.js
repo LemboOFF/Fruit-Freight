@@ -229,7 +229,8 @@ function drawGame() {
 
   // Boss
   if (boss.hp > 0) {
-    ctx.drawImage(boss.img, boss.x - cam.x, boss.y - cam.y, boss.width, boss.height);
+    const bossSprite = (boss.name === "Cucumber" && boss.isBreaking) ? boss.tiredImg : boss.img;
+    ctx.drawImage(bossSprite, boss.x - cam.x, boss.y - cam.y, boss.width, boss.height);
     drawHPBar(boss.x - cam.x, boss.y - cam.y - 12, boss.width, boss.hp, boss.maxHp, "#ff4444");
     ctx.fillStyle = "#ffffff";
     ctx.font = "bold 12px GameFont, sans-serif";
@@ -356,14 +357,18 @@ function drawGameOver() {
 }
 
 function drawBossTransition() {
+  const bossNames = ["Potato", "Cucumber", "Jalapeño"];
+  const currentBossName = bossNames[currentBossIndex];
+  const nextBossName = bossNames[currentBossIndex + 1];
+  
   ctx.fillStyle = "#808080"; // Gray background
   ctx.fillRect(0, 0, VIEW_W, VIEW_H);
   ctx.fillStyle = "#ffffff";
   ctx.font = "bold 36px GameFont, sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText("You beat Potato!", VIEW_W / 2, VIEW_H / 2 - 20);
+  ctx.fillText("You beat " + currentBossName + "!", VIEW_W / 2, VIEW_H / 2 - 20);
   ctx.font = "bold 24px GameFont, sans-serif";
-  ctx.fillText("Cucumber is coming next!", VIEW_W / 2, VIEW_H / 2 + 20);
+  ctx.fillText(nextBossName + " is coming next!", VIEW_W / 2, VIEW_H / 2 + 20);
 }
 
 function drawWin() {

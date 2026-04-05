@@ -61,6 +61,10 @@ const jalapenoMinionImg = new Image();
 jalapenoMinionImg.src = "assets/sprites/bosses/minions/jalapeno-minion.png";
 jalapenoMinionImg.onerror = onImgLoad;
 
+const cucumberTiredImg = new Image();
+cucumberTiredImg.src = "assets/sprites/bosses/cucumbertired.png";
+cucumberTiredImg.onerror = onImgLoad;
+
 const fryImg = new Image();
 fryImg.src = "assets/sprites/bosses/minions/fry-minion.png";
 fryImg.onerror = onImgLoad;
@@ -130,7 +134,7 @@ characters[3].attackImg.src = "assets/sprites/blueberry-attack.png";
 characters[3].attackImg.onerror = onImgLoad;
 
 let imgsLoaded = 0;
-const totalImgs = 25;
+const totalImgs = 26;
 
 // Font loading
 let fontLoaded = false;
@@ -161,6 +165,7 @@ mapImg.onload = onImgLoad;
 potatoImg.onload = onImgLoad;
 cucumberImg.onload = onImgLoad;
 cucumberAttackImg.onload = onImgLoad;
+cucumberTiredImg.onload = onImgLoad;
 fryImg.onload = onImgLoad;
 heartImg.onload = onImgLoad;
 heartEmptyImg.onload = onImgLoad;

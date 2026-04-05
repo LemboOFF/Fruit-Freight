@@ -40,7 +40,7 @@ function updateProjectiles() {
     p.y += p.dy;
     p.framesAlive++;
 
-    if (p.homing) {
+    if (p.homing && !p.noShrink) {
       const sizeMultiplier = Math.max(0.4, 1 - p.framesAlive * 0.01);
       p.width = Math.max(8, p.baseSize * sizeMultiplier);
       p.height = Math.max(8, p.baseSize * sizeMultiplier);
@@ -65,6 +65,10 @@ function updateProjectiles() {
 
     for (const fry of minions) {
       if (isColliding(p, fry)) {
+        // Skip damage if fire minion being hit by fire attack
+        if (p.source === 'boss' && fry.img === boss.minionImg && boss.name === "Jalapeño") {
+          continue;
+        }
         fry.hp -= p.damage;
         p.x = -999;
       }

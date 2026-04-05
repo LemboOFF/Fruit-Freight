@@ -1,14 +1,19 @@
 const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
+const ctx = canvas.getContext("2d", { alpha: false });
 
-const scale = Math.min(window.innerWidth / VIEW_W, window.innerHeight / VIEW_H);
+// Use 2x DPI for better image quality (renders at 2x resolution, then scaled down)
+const dpi = 2;
+const scale = Math.min(window.innerWidth / VIEW_W, window.innerHeight / VIEW_H) * dpi;
 canvas.width = VIEW_W * scale;
 canvas.height = VIEW_H * scale;
+canvas.style.width = (VIEW_W * Math.min(window.innerWidth / VIEW_W, window.innerHeight / VIEW_H)) + 'px';
+canvas.style.height = (VIEW_H * Math.min(window.innerWidth / VIEW_W, window.innerHeight / VIEW_H)) + 'px';
 ctx.scale(scale, scale);
 
-// Enable image smoothing for better quality
+// Enable high-quality image rendering
 ctx.imageSmoothingEnabled = true;
 ctx.imageSmoothingQuality = 'high';
+ctx.antialias = true;
 
 let gameState = "select";
 let selectedIndex = 0;
