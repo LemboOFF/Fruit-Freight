@@ -158,6 +158,8 @@ function deployBluBots() {
   bluBots.push({
     x: player.x + player.width / 2,
     y: player.y + player.height / 2,
+    width: 16,
+    height: 16,
     angle: Math.random() * 2 * Math.PI, // Random starting angle
     radius: 40,
     speed: 2,
