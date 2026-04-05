@@ -44,7 +44,7 @@ function updateCucumber() {
 
   if (boss.burstTimer <= 0) {
     // Start a new burst
-    boss.burstTimer = 0.7; // Interval between bursts
+    boss.burstTimer = 2.0; // Cooldown between bursts
     boss.attacksInBurst = 0;
     boss.attackTimer = 0.2; // First attack immediately
   }
@@ -71,7 +71,8 @@ function updateCucumber() {
         dx: dx * 6, // Slightly slower than player projectiles
         dy: dy * 6,
         img: boss.attackImg,
-        damage: 10 // Boss damage
+        damage: 10, // Boss damage
+        framesAlive: 0
       });
     }
 
@@ -79,7 +80,7 @@ function updateCucumber() {
     boss.attackTimer = 0.2; // Next attack in 0.2 seconds
 
     if (boss.attacksInBurst >= 5) {
-      boss.burstTimer = 0.7; // Reset burst timer
+      // Burst complete, cooldown will continue from current burstTimer value
     }
   }
 }
