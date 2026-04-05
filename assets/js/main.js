@@ -361,13 +361,13 @@ function update() {
     } else {
       updateBoss();
       updateBluBots();
+      updateMinions(); // Update minions for all boss types
       if (boss.name === "Potato") {
         spawnTimer++;
         if (spawnTimer >= SPAWN_INTERVAL) {
           spawnFries();
           spawnTimer = 0;
         }
-        updateMinions();
       }
     }
   }
