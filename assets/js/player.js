@@ -59,8 +59,8 @@ function updatePlayer() {
     }
   }
 
-  // Shooting
-  if (player.attackCooldown === 0) {
+  // Shooting (except for Robo-Berry who doesn't shoot)
+  if (player.charIndex !== 3 && player.attackCooldown === 0) {
     if (keys["ArrowLeft"])  { fireProjectile(-1, 0); player.attackCooldown = ATTACK_COOLDOWN; }
     if (keys["ArrowRight"]) { fireProjectile(1, 0);  player.attackCooldown = ATTACK_COOLDOWN; }
     if (keys["ArrowUp"])    { fireProjectile(0, -1); player.attackCooldown = ATTACK_COOLDOWN; }

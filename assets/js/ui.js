@@ -140,6 +140,7 @@ function drawSelectScreen() {
     if (cardX + cardW < -50 || cardX > VIEW_W + 50) continue;
 
     const isSelected = i === selectedIndex;
+    const isUnlocked = unlockedCharacters.includes(i);
 
     ctx.fillStyle = isSelected ? "#2e2e5e" : "#16162a";
     ctx.strokeStyle = isSelected ? "#ffffff" : "#444466";
@@ -149,12 +150,21 @@ function drawSelectScreen() {
     ctx.fill();
     ctx.stroke();
 
-    ctx.drawImage(char.img, cardX + 28, cardY + 10, 64, 64);
-
-    ctx.fillStyle = isSelected ? "#ffffff" : "#aaaaaa";
-    ctx.font = isSelected ? "bold 13px sans-serif" : "12px sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText(char.name, cardX + cardW / 2, cardY + cardH - 15);
+    if (isUnlocked) {
+      ctx.drawImage(char.img, cardX + 28, cardY + 10, 64, 64);
+      ctx.fillStyle = isSelected ? "#ffffff" : "#aaaaaa";
+      ctx.font = isSelected ? "bold 13px sans-serif" : "12px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(char.name, cardX + cardW / 2, cardY + cardH - 15);
+    } else {
+      // Draw locked character
+      ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
+      ctx.fillRect(cardX + 28, cardY + 10, 64, 64);
+      ctx.fillStyle = "#666666";
+      ctx.font = "bold 13px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("LOCKED", cardX + cardW / 2, cardY + cardH - 15);
+    }
   }
 
   drawArrow(90, 200, "left");
@@ -200,12 +210,14 @@ function drawGame() {
   }
 
   // Boss
-  ctx.drawImage(potatoImg, boss.x - cam.x, boss.y - cam.y, boss.width, boss.height);
-  drawHPBar(boss.x - cam.x, boss.y - cam.y - 12, boss.width, boss.hp, boss.maxHp, "#ff4444");
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 12px sans-serif";
-  ctx.textAlign = "center";
-  ctx.fillText("Potato", boss.x - cam.x + boss.width / 2, boss.y - cam.y - 16);
+  if (boss.hp > 0) {
+    ctx.drawImage(boss.img, boss.x - cam.x, boss.y - cam.y, boss.width, boss.height);
+    drawHPBar(boss.x - cam.x, boss.y - cam.y - 12, boss.width, boss.hp, boss.maxHp, "#ff4444");
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 12px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(boss.name, boss.x - cam.x + boss.width / 2, boss.y - cam.y - 16);
+  }
 
   // Fries
   for (const fry of minions) {
@@ -216,6 +228,11 @@ function drawGame() {
   // Projectiles
   for (const p of projectiles) {
     ctx.drawImage(p.img, p.x - cam.x, p.y - cam.y, p.width, p.height);
+  }
+
+  // BluBots
+  for (const bot of bluBots) {
+    ctx.drawImage(bluBotImg, bot.x - cam.x - 8, bot.y - cam.y - 8, 16, 16);
   }
 
   // Player
@@ -236,11 +253,13 @@ function drawGame() {
   }
 
   // Boss HP bar top right
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 13px sans-serif";
-  ctx.textAlign = "right";
-  ctx.fillText("Potato", VIEW_W - 10, 22);
-  drawHPBar(VIEW_W - 165, 10, 150, boss.hp, boss.maxHp, "#ff4444");
+  if (boss.hp > 0) {
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 13px sans-serif";
+    ctx.textAlign = "right";
+    ctx.fillText(boss.name, VIEW_W - 10, 22);
+    drawHPBar(VIEW_W - 165, 10, 150, boss.hp, boss.maxHp, "#ff4444");
+  }
 }
 
 function drawGameOver() {
@@ -253,6 +272,17 @@ function drawGameOver() {
   ctx.font = "18px sans-serif";
   ctx.fillStyle = "#aaaaaa";
   ctx.fillText("Refresh to try again", VIEW_W / 2, VIEW_H / 2 + 20);
+}
+
+function drawBossTransition() {
+  ctx.fillStyle = "#808080"; // Gray background
+  ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 36px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("You beat Potato!", VIEW_W / 2, VIEW_H / 2 - 20);
+  ctx.font = "bold 24px sans-serif";
+  ctx.fillText("Cucumber is coming next!", VIEW_W / 2, VIEW_H / 2 + 20);
 }
 
 function drawWin() {

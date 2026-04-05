@@ -28,6 +28,12 @@ mapImg.src = "assets/sprites/mapsprite.png";
 const potatoImg = new Image();
 potatoImg.src = "assets/sprites/bosses/potatoboss1.png";
 
+const cucumberImg = new Image();
+cucumberImg.src = "assets/sprites/bosses/cucumberboss2.png";
+
+const cucumberAttackImg = new Image();
+cucumberAttackImg.src = "assets/sprites/cucumber-attack.png";
+
 const fryImg = new Image();
 fryImg.src = "assets/sprites/bosses/minions/fry-minion.png";
 
@@ -88,7 +94,7 @@ characters[2].attackImg.src = "assets/sprites/banana-attack.png";
 characters[3].attackImg.src = "assets/sprites/blueberry-attack.png";
 
 let imgsLoaded = 0;
-const totalImgs = 18;
+const totalImgs = 20;
 
 function onImgLoad() {
   imgsLoaded++;
@@ -97,6 +103,8 @@ function onImgLoad() {
 
 mapImg.onload = onImgLoad;
 potatoImg.onload = onImgLoad;
+cucumberImg.onload = onImgLoad;
+cucumberAttackImg.onload = onImgLoad;
 fryImg.onload = onImgLoad;
 heartImg.onload = onImgLoad;
 heartEmptyImg.onload = onImgLoad;

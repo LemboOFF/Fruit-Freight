@@ -24,10 +24,6 @@ function updateProjectiles() {
     if (boss && isColliding(p, boss)) {
       boss.hp -= p.damage;
       p.x = -999;
-      if (boss.hp <= 0) {
-        boss.hp = 0;
-        gameState = "win";
-      }
     }
 
     for (const fry of minions) {
