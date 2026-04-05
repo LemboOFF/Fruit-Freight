@@ -4,7 +4,6 @@ const GROUND_Y = 584;
 const VIEW_W = 500;
 const VIEW_H = 500;
 
-// Stat/UI images
 const heartImg = new Image();
 const heartEmptyImg = new Image();
 const heartHalfImg = new Image();
@@ -12,6 +11,7 @@ const damageImg = new Image();
 const speedImg = new Image();
 const markingImg = new Image();
 const tomatoPuddleImg = new Image();
+const bluBotImg = new Image();
 
 heartImg.src = "assets/sprites/heart-sprite.png";
 heartEmptyImg.src = "assets/sprites/heart-empty-sprite.png";
@@ -20,20 +20,17 @@ damageImg.src = "assets/sprites/damage-sprite.png";
 speedImg.src = "assets/sprites/speed-sprite.png";
 markingImg.src = "assets/sprites/marking-sprite.png";
 tomatoPuddleImg.src = "assets/sprites/tomato-puddle.png";
+bluBotImg.src = "assets/sprites/bluebot-droid.png";
 
-// Map
 const mapImg = new Image();
 mapImg.src = "assets/sprites/mapsprite.png";
 
-// Boss images
 const potatoImg = new Image();
 potatoImg.src = "assets/sprites/bosses/potatoboss1.png";
 
-// Minion images
 const fryImg = new Image();
 fryImg.src = "assets/sprites/bosses/minions/fry-minion.png";
 
-// Characters
 const characters = [
   {
     name: "Blueberry",
@@ -67,19 +64,31 @@ const characters = [
     speed: 6,
     damageLevel: 1,
     speedLevel: 3,
+  },
+  {
+    name: "Robo-Berry",
+    ability: "Deploys BluBots that orbit and damage nearby enemies",
+    img: new Image(),
+    attackImg: new Image(),
+    maxHearts: 5,
+    damage: 5,
+    speed: 2,
+    damageLevel: 1,
+    speedLevel: 1,
   }
 ];
 
 characters[0].img.src = "assets/sprites/blueberry.png";
 characters[1].img.src = "assets/sprites/tomato.png";
 characters[2].img.src = "assets/sprites/banana.png";
+characters[3].img.src = "assets/sprites/robo-berry.png";
 characters[0].attackImg.src = "assets/sprites/blueberry-attack.png";
 characters[1].attackImg.src = "assets/sprites/tomato-attack.png";
 characters[2].attackImg.src = "assets/sprites/banana-attack.png";
+characters[3].attackImg.src = "assets/sprites/blueberry-attack.png";
 
-// Image loading tracker
 let imgsLoaded = 0;
-const totalImgs = 16;
+const totalImgs = 18;
 
 function onImgLoad() {
   imgsLoaded++;
@@ -96,9 +105,11 @@ damageImg.onload = onImgLoad;
 speedImg.onload = onImgLoad;
 markingImg.onload = onImgLoad;
 tomatoPuddleImg.onload = onImgLoad;
+bluBotImg.onload = onImgLoad;
 characters[0].img.onload = onImgLoad;
 characters[1].img.onload = onImgLoad;
 characters[2].img.onload = onImgLoad;
+characters[3].img.onload = onImgLoad;
 characters[0].attackImg.onload = onImgLoad;
 characters[1].attackImg.onload = onImgLoad;
 characters[2].attackImg.onload = onImgLoad;
