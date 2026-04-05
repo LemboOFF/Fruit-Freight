@@ -11,4 +11,5 @@ function createBoss() {
 
 function updateBoss() {
   // Potato is harmless, nothing to update yet
+  
 }
