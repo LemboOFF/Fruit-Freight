@@ -47,6 +47,7 @@ function updatePlayer() {
   if (player.charIndex === 0) {
     if (player.mushyMode) {
       player.mushyModeTimer++;
+      player.speed = player.baseSpeed * 0.5; // Half speed in mushy mode
       if (player.healingCooldown === 0 && player.halfHearts < player.maxHalfHearts) {
         player.halfHearts += 0.5; // Heal 0.5 half-hearts per frame
         if (player.halfHearts > player.maxHalfHearts) {
@@ -54,6 +55,8 @@ function updatePlayer() {
         }
         player.healingCooldown = 5; // Heal every 5 frames (12 times per second)
       }
+    } else {
+      player.speed = player.baseSpeed; // Normal speed when not in mushy mode
     }
   }
 
