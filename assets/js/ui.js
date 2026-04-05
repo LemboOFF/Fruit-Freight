@@ -178,6 +178,24 @@ function drawSelectScreen() {
 
   drawStats();
 
+  // Draw UNLOCK ALL button at top left
+  const unlockBtnX = 10;
+  const unlockBtnY = 10;
+  const unlockBtnW = 80;
+  const unlockBtnH = 30;
+  
+  ctx.fillStyle = testUnlockAll ? "#44ff44" : "#888888";
+  ctx.fillRect(unlockBtnX, unlockBtnY, unlockBtnW, unlockBtnH);
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(unlockBtnX, unlockBtnY, unlockBtnW, unlockBtnH);
+  
+  ctx.fillStyle = "#000000";
+  ctx.font = "bold 11px GameFont, sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("UNLOCK", unlockBtnX + unlockBtnW / 2, unlockBtnY + unlockBtnH / 2 + 5);
+  ctx.fillText("ALL", unlockBtnX + unlockBtnW / 2, unlockBtnY + unlockBtnH / 2 + 16);
+
   ctx.fillStyle = "#3a3aaa";
   ctx.strokeStyle = "#ffffff";
   ctx.lineWidth = 2;

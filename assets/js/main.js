@@ -17,6 +17,7 @@ let currentBossIndex = 0;
 const bossTypes = ["potato", "cucumber"];
 let transitionTimer = 0;
 let unlockedCharacters = [0, 1, 2]; // Start with first 3 characters unlocked
+let testUnlockAll = false; // Toggle for UNLOCK ALL button
 let minions = [];
 let projectiles = [];
 let puddles = [];
@@ -81,15 +82,29 @@ canvas.addEventListener("click", e => {
   const rect = canvas.getBoundingClientRect();
   const mx = (e.clientX - rect.left) / scale;
   const my = (e.clientY - rect.top) / scale;
+  
+  // Check UNLOCK ALL button
+  if (mx >= 10 && mx <= 90 && my >= 10 && my <= 40) {
+    testUnlockAll = !testUnlockAll;
+    if (testUnlockAll) {
+      unlockedCharacters = [0, 1, 2, 3];
+    } else {
+      unlockedCharacters = [0, 1, 2];
+    }
+    return;
+  }
 
+  // Left arrow
   if (mx >= 60 && mx <= 120 && my >= 170 && my <= 230) {
     selectedIndex = getNextUnlockedCharacter(selectedIndex, -1);
     targetOffset = selectedIndex * 200;
   }
+  // Right arrow
   if (mx >= 380 && mx <= 440 && my >= 170 && my <= 230) {
     selectedIndex = getNextUnlockedCharacter(selectedIndex, 1);
     targetOffset = selectedIndex * 200;
   }
+  // Start button
   if (mx >= 175 && mx <= 325 && my >= 420 && my <= 460) startGame();
 });
 
@@ -112,6 +127,10 @@ function startBossBattle() {
   bluBots = [];
   spawnTimer = 0;
   gameState = "playing";
+  
+  // Reset unlock state when starting game
+  testUnlockAll = false;
+  unlockedCharacters = [0, 1, 2];
 }
 
 function returnToMenu() {
