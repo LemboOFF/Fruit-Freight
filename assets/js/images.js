@@ -12,6 +12,7 @@ const speedImg = new Image();
 const markingImg = new Image();
 const tomatoPuddleImg = new Image();
 const bluBotImg = new Image();
+const brokenBluBotImg = new Image();
 
 heartImg.src = "assets/sprites/heart-sprite.png";
 heartEmptyImg.src = "assets/sprites/heart-empty-sprite.png";
@@ -20,7 +21,8 @@ damageImg.src = "assets/sprites/damage-sprite.png";
 speedImg.src = "assets/sprites/speed-sprite.png";
 markingImg.src = "assets/sprites/marking-sprite.png";
 tomatoPuddleImg.src = "assets/sprites/tomato-puddle.png";
-bluBotImg.src = "assets/sprites/bluebot-droid.png";
+bluBotImg.src = "assets/sprites/blubot.png";
+brokenBluBotImg.src = "assets/sprites/blubot-broken.png";
 
 const mapImg = new Image();
 mapImg.src = "assets/sprites/mapsprite.png";
@@ -94,7 +96,7 @@ characters[2].attackImg.src = "assets/sprites/banana-attack.png";
 characters[3].attackImg.src = "assets/sprites/blueberry-attack.png";
 
 let imgsLoaded = 0;
-const totalImgs = 20;
+const totalImgs = 21;
 
 function onImgLoad() {
   imgsLoaded++;
@@ -114,6 +116,7 @@ speedImg.onload = onImgLoad;
 markingImg.onload = onImgLoad;
 tomatoPuddleImg.onload = onImgLoad;
 bluBotImg.onload = onImgLoad;
+brokenBluBotImg.onload = onImgLoad;
 characters[0].img.onload = onImgLoad;
 characters[1].img.onload = onImgLoad;
 characters[2].img.onload = onImgLoad;

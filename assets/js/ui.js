@@ -232,7 +232,18 @@ function drawGame() {
 
   // BluBots
   for (const bot of bluBots) {
-    ctx.drawImage(bluBotImg, bot.x - cam.x - 8, bot.y - cam.y - 8, 16, 16);
+    const sprite = bot.isBroken ? brokenBluBotImg : bluBotImg;
+    ctx.drawImage(sprite, bot.x - cam.x - 8, bot.y - cam.y - 8, 16, 16);
+    
+    // Draw laser if active
+    if (bot.laserActive && bot.target) {
+      ctx.strokeStyle = "#00FFFF"; // Cyan laser color
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(bot.x - cam.x, bot.y - cam.y);
+      ctx.lineTo(bot.target.x + bot.target.width / 2 - cam.x, bot.target.y + bot.target.height / 2 - cam.y);
+      ctx.stroke();
+    }
   }
 
   // Player

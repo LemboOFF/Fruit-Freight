@@ -129,41 +129,131 @@ function returnToMenu() {
 function deployBluBots() {
   if (bluBots.length >= 5) return; // Max 5 BluBots
   
-  // Deploy 1 BluBot that orbits the player
+  // Deploy 1 BluBot that will target nearest enemy
   bluBots.push({
     x: player.x + player.width / 2,
     y: player.y + player.height / 2,
     angle: Math.random() * 2 * Math.PI, // Random starting angle
     radius: 40,
     speed: 2,
-    damage: 0.2, // Damage per tick
-    damageCooldown: 0,
-    lifetime: 600 // 10 seconds
+    kills: 0, // Track enemy kills
+    isBroken: false,
+    target: null, // Current target enemy
+    laserActive: false,
+    laserSoundPlaying: false
   });
 }
 
 function updateBluBots() {
+  let anyLaserActive = false;
+  
   for (let i = bluBots.length - 1; i >= 0; i--) {
     const bot = bluBots[i];
-    bot.angle += bot.speed * 0.05; // Orbit speed
-    bot.x = player.x + player.width / 2 + Math.cos(bot.angle) * bot.radius;
-    bot.y = player.y + player.height / 2 + Math.sin(bot.angle) * bot.radius;
-    bot.lifetime--;
-
-    // Damage nearby enemies (15 DPS = 0.25 damage per frame at 60 FPS)
-    if (boss && distEntities(bot, boss) < 30) {
-      boss.hp -= 0.25;
-    }
-
-    for (let j = minions.length - 1; j >= 0; j--) {
-      if (distEntities(bot, minions[j]) < 30) {
-        minions[j].hp -= 0.25;
+    
+    // Find nearest enemy
+    let nearestEnemy = null;
+    let nearestDist = Infinity;
+    
+    // Check boss
+    if (boss && boss.hp > 0) {
+      const dist = distEntities(bot, boss);
+      if (dist < nearestDist) {
+        nearestDist = dist;
+        nearestEnemy = boss;
       }
     }
-
-    if (bot.lifetime <= 0) {
-      bluBots.splice(i, 1);
+    
+    // Check minions
+    for (const minion of minions) {
+      if (minion.hp > 0) { // Only target alive minions
+        const dist = distEntities(bot, minion);
+        if (dist < nearestDist) {
+          nearestDist = dist;
+          nearestEnemy = minion;
+        }
+      }
     }
+    
+    if (nearestEnemy && nearestDist < 150) { // Max targeting range
+      // Check if current target is still alive
+      if (bot.target && bot.target.hp <= 0) {
+        bot.target = null;
+        bot.laserActive = false;
+      }
+      
+      // Set new target if we have one
+      if (nearestEnemy !== bot.target) {
+        bot.target = nearestEnemy;
+      }
+      
+      if (bot.target) {
+        // Orbit around the target
+        const dx = bot.x - bot.target.x - bot.target.width / 2;
+        const dy = bot.y - bot.target.y - bot.target.height / 2;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist > 0) {
+          bot.angle = Math.atan2(dy, dx);
+          // Move towards target if too far
+          if (dist > bot.radius) {
+            bot.x -= (dx / dist) * bot.speed;
+            bot.y -= (dy / dist) * bot.speed;
+          } else {
+            // Orbit
+            bot.angle += bot.speed * 0.1;
+            bot.x = bot.target.x + bot.target.width / 2 + Math.cos(bot.angle) * bot.radius;
+            bot.y = bot.target.y + bot.target.height / 2 + Math.sin(bot.angle) * bot.radius;
+          }
+        }
+        
+        // Fire laser
+        bot.laserActive = true;
+        anyLaserActive = true;
+        
+        // Damage target continuously
+        if (bot.isBroken) {
+          bot.target.hp -= 0.4; // Broken bots do more damage
+        } else {
+          bot.target.hp -= 0.2;
+        }
+        
+        // Check if enemy died
+        if (bot.target.hp <= 0) {
+          bot.kills++;
+          
+          if (bot.kills >= 2) {
+            // BluBot dies after 2 kills
+            bluBots.splice(i, 1);
+            continue;
+          } else if (bot.kills >= 1 && !bot.isBroken) {
+            // Become broken after 1 kill
+            bot.isBroken = true;
+          }
+          
+          bot.target = null;
+          bot.laserActive = false;
+        }
+      }
+    } else {
+      // No target, orbit around player
+      bot.angle += bot.speed * 0.05;
+      bot.x = player.x + player.width / 2 + Math.cos(bot.angle) * bot.radius;
+      bot.y = player.y + player.height / 2 + Math.sin(bot.angle) * bot.radius;
+      
+      // Stop laser
+      bot.target = null;
+      bot.laserActive = false;
+    }
+  }
+  
+  // Handle laser sound - play if any BluBot is firing, stop if none are
+  if (anyLaserActive && bluBotLaserSound.paused) {
+    bluBotLaserSound.currentTime = 0;
+    bluBotLaserSound.loop = true;
+    bluBotLaserSound.play();
+  } else if (!anyLaserActive && !bluBotLaserSound.paused) {
+    bluBotLaserSound.pause();
+    bluBotLaserSound.currentTime = 0;
   }
 }
 

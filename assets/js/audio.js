@@ -1,5 +1,6 @@
 const mainMenuSound = new Audio("assets/sounds/main-menu-sound.ogg");
 const tomatoSplatSound = new Audio("assets/sounds/tomato-splat.ogg");
+const bluBotLaserSound = new Audio("assets/sounds/blubot-laser-sound.ogg");
 const battleSounds = {
   potato: new Audio("assets/sounds/battle-potato.ogg"),
   cucumber: new Audio("assets/sounds/battle-cucumber.ogg"),
