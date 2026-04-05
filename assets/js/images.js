@@ -36,6 +36,15 @@ cucumberImg.src = "assets/sprites/bosses/cucumberboss2.png";
 const cucumberAttackImg = new Image();
 cucumberAttackImg.src = "assets/sprites/cucumber-attack.png";
 
+const jalapenoImg = new Image();
+jalapenoImg.src = "assets/sprites/bosses/jalapeno-boss.png";
+
+const jalapenoAttackImg = new Image();
+jalapenoAttackImg.src = "assets/sprites/jalapeno-attack.png";
+
+const jalapenoMinionImg = new Image();
+jalapenoMinionImg.src = "assets/sprites/jalapeno-minion.png";
+
 const fryImg = new Image();
 fryImg.src = "assets/sprites/bosses/minions/fry-minion.png";
 
@@ -96,7 +105,7 @@ characters[2].attackImg.src = "assets/sprites/banana-attack.png";
 characters[3].attackImg.src = "assets/sprites/blueberry-attack.png";
 
 let imgsLoaded = 0;
-const totalImgs = 21;
+const totalImgs = 25;
 
 // Font loading
 let fontLoaded = false;
@@ -144,3 +153,7 @@ characters[3].img.onload = onImgLoad;
 characters[0].attackImg.onload = onImgLoad;
 characters[1].attackImg.onload = onImgLoad;
 characters[2].attackImg.onload = onImgLoad;
+characters[3].attackImg.onload = onImgLoad;
+jalapenoImg.onload = onImgLoad;
+jalapenoAttackImg.onload = onImgLoad;
+jalapenoMinionImg.onload = onImgLoad;

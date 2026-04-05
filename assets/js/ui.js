@@ -239,7 +239,8 @@ function drawGame() {
 
   // Fries
   for (const fry of minions) {
-    drawImageFlipped(fryImg, fry.x - cam.x, fry.y - cam.y, fry.width, fry.height, fry.facingLeft);
+    const minionImg = fry.img || fryImg;
+    drawImageFlipped(minionImg, fry.x - cam.x, fry.y - cam.y, fry.width, fry.height, fry.facingLeft);
     drawHPBar(fry.x - cam.x, fry.y - cam.y - 8, fry.width, fry.hp, fry.maxHp, "#ffaa00");
   }
 

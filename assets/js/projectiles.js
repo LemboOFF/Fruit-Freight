@@ -20,9 +20,32 @@ function updateProjectiles() {
   );
 
   for (const p of projectiles) {
+    if (p.homing && p.source === 'boss') {
+      const targetX = player.x + player.width / 2;
+      const targetY = player.y + player.height / 2;
+      const tx = targetX - p.x;
+      const ty = targetY - p.y;
+      const dist = Math.max(1, Math.sqrt(tx * tx + ty * ty));
+      const desiredSpeed = 5;
+      const desiredX = (tx / dist) * desiredSpeed;
+      const desiredY = (ty / dist) * desiredSpeed;
+      p.dx += (desiredX - p.dx) * 0.08;
+      p.dy += (desiredY - p.dy) * 0.08;
+      const speed = Math.sqrt(p.dx * p.dx + p.dy * p.dy) || 1;
+      p.dx = (p.dx / speed) * desiredSpeed;
+      p.dy = (p.dy / speed) * desiredSpeed;
+    }
+
     p.x += p.dx;
     p.y += p.dy;
     p.framesAlive++;
+
+    if (p.homing) {
+      const sizeMultiplier = Math.max(0.4, 1 - p.framesAlive * 0.01);
+      p.width = Math.max(8, p.baseSize * sizeMultiplier);
+      p.height = Math.max(8, p.baseSize * sizeMultiplier);
+      p.damage = Math.max(4, p.baseDamage - Math.floor(p.framesAlive / 15));
+    }
 
     if (boss && isColliding(p, boss) && p.framesAlive > 5 && p.source !== 'boss') {
       boss.hp -= p.damage;

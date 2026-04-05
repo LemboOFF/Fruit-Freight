@@ -24,6 +24,21 @@ function createBoss(bossType = "cucumber") {
       burstTimer: 0,
       attacksInBurst: 0,
       canAttack: true
+    },
+    jalapeno: {
+      x: 500 - 125,
+      y: 1040 - 125,
+      width: 250,
+      height: 250,
+      hp: 2800,
+      maxHp: 2800,
+      name: "Jalapeño",
+      img: jalapenoImg,
+      attackImg: jalapenoAttackImg,
+      minionImg: jalapenoMinionImg,
+      attackTimer: 0,
+      minionTimer: 0,
+      canAttack: true
     }
   };
 
@@ -43,6 +58,73 @@ function updateBoss() {
         gameState = "gameover";
       }
     }
+  } else if (boss.name === "Jalapeño") {
+    updateJalapeno();
+    
+    if (isColliding(boss, player) && player.damageCooldown === 0) {
+      player.halfHearts -= 2;
+      player.damageCooldown = 120;
+      if (player.halfHearts <= 0) {
+        player.halfHearts = 0;
+        gameState = "gameover";
+      }
+    }
+  }
+}
+
+function updateJalapeno() {
+  if (!boss.canAttack) return;
+
+  boss.minionTimer -= 1/60;
+  boss.attackTimer -= 1/60;
+
+  const fireX = boss.x + boss.width / 2;
+  const fireY = boss.y + boss.height * 0.55;
+
+  if (boss.minionTimer <= 0) {
+    boss.minionTimer = 3.5; // Spawn a minion every 3.5 seconds
+    minions.push({
+      x: fireX - 16,
+      y: fireY - 16,
+      width: 28,
+      height: 28,
+      hp: 30,
+      maxHp: 30,
+      baseSpeed: 1.2,
+      speed: 1.2,
+      dx: (Math.random() - 0.5) * 2,
+      dy: (Math.random() - 0.5) * 2,
+      damageCooldown: 0,
+      facingLeft: false,
+      speedDebuffTimer: 0,
+      img: boss.minionImg
+    });
+  }
+
+  if (boss.attackTimer <= 0) {
+    boss.attackTimer = 1.5; // Fire a homing pepper projectile
+    const targetX = player.x + player.width / 2;
+    const targetY = player.y + player.height / 2;
+    const dx = targetX - fireX;
+    const dy = targetY - fireY;
+    const dist = Math.max(1, Math.sqrt(dx * dx + dy * dy));
+    const speed = 5;
+
+    projectiles.push({
+      x: fireX - 10,
+      y: fireY - 10,
+      width: 18,
+      height: 18,
+      baseSize: 18,
+      dx: (dx / dist) * speed,
+      dy: (dy / dist) * speed,
+      img: boss.attackImg,
+      baseDamage: 12,
+      damage: 12,
+      framesAlive: 0,
+      source: 'boss',
+      homing: true
+    });
   }
 }
 
