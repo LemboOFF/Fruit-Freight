@@ -67,6 +67,7 @@ canvas.addEventListener("click", e => {
 
 function startGame() {
   fadeOutMainMenu();
+  playBattleMusic("potato");
   player = createPlayer(selectedIndex);
   boss = createBoss();
   minions = [];
