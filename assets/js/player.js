@@ -20,7 +20,10 @@ function createPlayer(charIndex) {
     abilityCooldown: 0,
     speedBuff: false,
     speedDebuff: false,
-    speedEffectTimer: 0
+    speedEffectTimer: 0,
+    mushyMode: false,
+    mushyModeTimer: 0,
+    healingCooldown: 0
   };
 }
 
@@ -38,6 +41,21 @@ function updatePlayer() {
   if (player.damageCooldown > 0) player.damageCooldown--;
   if (player.attackCooldown > 0) player.attackCooldown--;
   if (player.abilityCooldown > 0) player.abilityCooldown--;
+  if (player.healingCooldown > 0) player.healingCooldown--;
+  
+  // Blueberry Mushy Mode
+  if (player.charIndex === 0) {
+    if (player.mushyMode) {
+      player.mushyModeTimer++;
+      if (player.healingCooldown === 0 && player.halfHearts < player.maxHalfHearts) {
+        player.halfHearts += 0.5; // Heal 0.5 half-hearts per frame
+        if (player.halfHearts > player.maxHalfHearts) {
+          player.halfHearts = player.maxHalfHearts;
+        }
+        player.healingCooldown = 5; // Heal every 5 frames (12 times per second)
+      }
+    }
+  }
 
   // Speed effect timer
   if (player.speedEffectTimer > 0) {

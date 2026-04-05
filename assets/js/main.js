@@ -49,9 +49,15 @@ document.addEventListener("keydown", e => {
   }
 
   if (gameState === "playing") {
-    if (e.key === " " && player.charIndex === 1 && player.abilityCooldown === 0) {
-      placePuddle();
-      player.abilityCooldown = PUDDLE_COOLDOWN;
+    if (e.key === " ") {
+      if (player.charIndex === 0) {
+        // Blueberry toggle mushy mode
+        player.mushyMode = !player.mushyMode;
+      } else if (player.charIndex === 1 && player.abilityCooldown === 0) {
+        // Tomato place puddle
+        placePuddle();
+        player.abilityCooldown = PUDDLE_COOLDOWN;
+      }
     }
     // Robo-Berry now deploys BluBots automatically
     if (e.key === "Escape") {

@@ -32,7 +32,7 @@ function updateProjectiles() {
     // Check collision with player (for boss projectiles)
     if (isColliding(p, player) && p.framesAlive > 5 && p.source === 'boss' && player.damageCooldown === 0) {
       player.halfHearts -= 1;
-      player.damageCooldown = 60; // Same cooldown as fry damage
+      player.damageCooldown = 120; // 2 seconds hit immunity
       p.x = -999;
       if (player.halfHearts <= 0) {
         player.halfHearts = 0;

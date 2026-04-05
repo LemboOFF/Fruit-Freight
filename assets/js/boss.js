@@ -37,7 +37,7 @@ function updateBoss() {
     // Contact damage for cucumber
     if (isColliding(boss, player) && player.damageCooldown === 0) {
       player.halfHearts -= 2; // Boss does more damage than minions
-      player.damageCooldown = 90; // Longer cooldown for boss
+      player.damageCooldown = 120; // 2 seconds hit immunity
       if (player.halfHearts <= 0) {
         player.halfHearts = 0;
         gameState = "gameover";

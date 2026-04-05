@@ -249,13 +249,25 @@ function drawGame() {
   // Player
   const char = characters[player.charIndex];
   ctx.drawImage(char.img, player.x - cam.x, player.y - cam.y, player.width, player.height);
+  
+  // Blueberry Mushy Mode brown tint
+  if (player.charIndex === 0 && player.mushyMode) {
+    ctx.fillStyle = "rgba(139, 69, 19, 0.4)"; // Brown tint with transparency
+    ctx.fillRect(player.x - cam.x, player.y - cam.y, player.width, player.height);
+  }
+  
   drawSpeedEffectOnPlayer(cam);
 
   // HUD
   drawHearts();
 
-  // Ability cooldown
-  if (player.charIndex === 1) {
+  // Ability status
+  if (player.charIndex === 0) {
+    ctx.fillStyle = player.mushyMode ? "#d4a574" : "#888888";
+    ctx.font = "11px GameFont, sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText(player.mushyMode ? `Mushy Mode: ON` : "Mushy Mode: OFF", 10, 40);
+  } else if (player.charIndex === 1) {
     const cooldownPct = player.abilityCooldown / PUDDLE_COOLDOWN;
     ctx.fillStyle = cooldownPct > 0 ? "#888888" : "#44ff44";
     ctx.font = "11px GameFont, sans-serif";
