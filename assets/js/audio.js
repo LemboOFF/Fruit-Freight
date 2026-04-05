@@ -17,11 +17,25 @@ for (const key in battleSounds) {
 let menuStarted = false;
 let currentBattleSound = null;
 
-function tryStartMusic() {
+function startMainMenuMusic() {
   if (!menuStarted) {
     menuStarted = true;
+    mainMenuSound.volume = 0;
     mainMenuSound.play();
+    // Fade in
+    const fadeInterval = setInterval(() => {
+      if (mainMenuSound.volume < 0.95) {
+        mainMenuSound.volume += 0.05;
+      } else {
+        mainMenuSound.volume = 1;
+        clearInterval(fadeInterval);
+      }
+    }, 50);
   }
+}
+
+function tryStartMusic() {
+  // This function is now deprecated - music starts automatically
 }
 
 function fadeOutMainMenu() {
@@ -38,15 +52,36 @@ function fadeOutMainMenu() {
 
 function playBattleMusic(bossName) {
   if (currentBattleSound) {
-    currentBattleSound.pause();
-    currentBattleSound.currentTime = 0;
+    // Fade out current battle music
+    fadeOutBattleMusic(() => {
+      // Then start new music
+      startBattleMusic(bossName);
+    });
+  } else {
+    startBattleMusic(bossName);
   }
-  currentBattleSound = battleSounds[bossName];
-  currentBattleSound.play();
 }
 
-function fadeOutBattleMusic() {
-  if (!currentBattleSound) return;
+function startBattleMusic(bossName) {
+  currentBattleSound = battleSounds[bossName];
+  currentBattleSound.volume = 0;
+  currentBattleSound.play();
+  // Fade in
+  const fadeInterval = setInterval(() => {
+    if (currentBattleSound.volume < 0.95) {
+      currentBattleSound.volume += 0.05;
+    } else {
+      currentBattleSound.volume = 1;
+      clearInterval(fadeInterval);
+    }
+  }, 50);
+}
+
+function fadeOutBattleMusic(callback) {
+  if (!currentBattleSound) {
+    if (callback) callback();
+    return;
+  }
   const sound = currentBattleSound;
   const fadeInterval = setInterval(() => {
     if (sound.volume > 0.05) {
@@ -54,7 +89,12 @@ function fadeOutBattleMusic() {
     } else {
       sound.pause();
       sound.volume = 0;
+      currentBattleSound = null;
       clearInterval(fadeInterval);
+      if (callback) callback();
     }
   }, 50);
 }
+
+// Start main menu music when the script loads
+startMainMenuMusic();

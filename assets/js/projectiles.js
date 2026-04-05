@@ -9,7 +9,8 @@ function fireProjectile(dirX, dirY) {
     dy: dirY * 8,
     img: char.attackImg,
     damage: player.damage,
-    framesAlive: 0
+    framesAlive: 0,
+    source: 'player'
   });
 }
 
@@ -23,7 +24,7 @@ function updateProjectiles() {
     p.y += p.dy;
     p.framesAlive++;
 
-    if (boss && isColliding(p, boss) && p.framesAlive > 5) {
+    if (boss && isColliding(p, boss) && p.framesAlive > 5 && p.source !== 'boss') {
       boss.hp -= p.damage;
       p.x = -999;
     }

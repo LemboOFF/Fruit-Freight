@@ -34,7 +34,6 @@ function getNextUnlockedCharacter(currentIndex, direction) {
 }
 
 document.addEventListener("keydown", e => {
-  tryStartMusic();
   keys[e.key] = true;
 
   if (gameState === "select") {
@@ -58,13 +57,19 @@ document.addEventListener("keydown", e => {
       deployBluBots();
       player.abilityCooldown = 120; // 2 seconds cooldown
     }
+    if (e.key === "Escape") {
+      returnToMenu();
+    }
+  }
+
+  if (e.key === "Escape" && (gameState === "gameover" || gameState === "win")) {
+    returnToMenu();
   }
 });
 
 document.addEventListener("keyup", e => keys[e.key] = false);
 
 canvas.addEventListener("click", e => {
-  tryStartMusic();
   if (gameState !== "select") return;
 
   const rect = canvas.getBoundingClientRect();
@@ -101,6 +106,24 @@ function startBossBattle() {
   bluBots = [];
   spawnTimer = 0;
   gameState = "playing";
+}
+
+function returnToMenu() {
+  // Fade out battle music and fade in main menu music
+  fadeOutBattleMusic(() => {
+    startMainMenuMusic();
+  });
+  
+  // Reset game state
+  gameState = "select";
+  player = null;
+  boss = null;
+  currentBossIndex = 0;
+  minions = [];
+  projectiles = [];
+  puddles = [];
+  bluBots = [];
+  spawnTimer = 0;
 }
 
 function deployBluBots() {

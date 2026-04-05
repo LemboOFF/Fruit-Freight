@@ -72,7 +72,8 @@ function updateCucumber() {
         dy: dy * 6,
         img: boss.attackImg,
         damage: 10, // Boss damage
-        framesAlive: 0
+        framesAlive: 0,
+        source: 'boss'
       });
     }
 
