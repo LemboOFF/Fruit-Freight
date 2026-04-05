@@ -302,6 +302,45 @@ function drawGame() {
     ctx.fillText(boss.name, VIEW_W - 10, 22);
     drawHPBar(VIEW_W - 165, 10, 150, boss.hp, boss.maxHp, "#ff4444");
   }
+
+  // BluBot Targeting Menu (top-middle)
+  if (bluBots.length > 0) {
+    const menuX = 150;
+    const menuY = 15;
+    const menuW = 200;
+    const menuH = 20;
+    
+    // Main button
+    ctx.fillStyle = "#1a3a3a";
+    ctx.strokeStyle = "#00cccc";
+    ctx.lineWidth = 2;
+    ctx.fillRect(menuX, menuY, menuW, menuH);
+    ctx.strokeRect(menuX, menuY, menuW, menuH);
+    
+    ctx.fillStyle = "#00cccc";
+    ctx.font = "bold 11px GameFont, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(`TARGETING: ${bluBotTargetMode}`, menuX + menuW / 2, menuY + 14);
+    
+    // Dropdown menu
+    if (targetingMenuOpen) {
+      for (let i = 0; i < targetingModes.length; i++) {
+        const optionY = menuY + 20 + i * 20;
+        const isSelected = targetingModes[i] === bluBotTargetMode;
+        
+        ctx.fillStyle = isSelected ? "#00aa88" : "#0a2a2a";
+        ctx.strokeStyle = isSelected ? "#00ffff" : "#004488";
+        ctx.lineWidth = 1;
+        ctx.fillRect(160, optionY, 180, 18);
+        ctx.strokeRect(160, optionY, 180, 18);
+        
+        ctx.fillStyle = isSelected ? "#ffffff" : "#00cccc";
+        ctx.font = isSelected ? "bold 10px GameFont, sans-serif" : "10px GameFont, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(targetingModes[i], 250, optionY + 13);
+      }
+    }
+  }
 }
 
 function drawGameOver() {

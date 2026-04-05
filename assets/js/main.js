@@ -23,6 +23,9 @@ let projectiles = [];
 let puddles = [];
 let bluBots = [];
 let spawnTimer = 0;
+let bluBotTargetMode = "Closest"; // Targeting mode for BluBots
+let targetingMenuOpen = false;
+const targetingModes = ["Closest", "Random", "Strongest", "Weakest", "Boss First"];
 
 const keys = {};
 
@@ -77,35 +80,56 @@ document.addEventListener("keydown", e => {
 document.addEventListener("keyup", e => keys[e.key] = false);
 
 canvas.addEventListener("click", e => {
-  if (gameState !== "select") return;
-
-  const rect = canvas.getBoundingClientRect();
-  const mx = (e.clientX - rect.left) / scale;
-  const my = (e.clientY - rect.top) / scale;
-  
-  // Check UNLOCK ALL button
-  if (mx >= 10 && mx <= 90 && my >= 10 && my <= 40) {
-    testUnlockAll = !testUnlockAll;
-    if (testUnlockAll) {
-      unlockedCharacters = [0, 1, 2, 3];
-    } else {
-      unlockedCharacters = [0, 1, 2];
+  if (gameState === "select") {
+    const rect = canvas.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) / scale;
+    const my = (e.clientY - rect.top) / scale;
+    
+    // Check UNLOCK ALL button
+    if (mx >= 10 && mx <= 90 && my >= 10 && my <= 40) {
+      testUnlockAll = !testUnlockAll;
+      if (testUnlockAll) {
+        unlockedCharacters = [0, 1, 2, 3];
+      } else {
+        unlockedCharacters = [0, 1, 2];
+      }
+      return;
     }
-    return;
+
+    // Left arrow
+    if (mx >= 60 && mx <= 120 && my >= 170 && my <= 230) {
+      selectedIndex = getNextUnlockedCharacter(selectedIndex, -1);
+      targetOffset = selectedIndex * 200;
+    }
+    // Right arrow
+    if (mx >= 380 && mx <= 440 && my >= 170 && my <= 230) {
+      selectedIndex = getNextUnlockedCharacter(selectedIndex, 1);
+      targetOffset = selectedIndex * 200;
+    }
+    // Start button
+    if (mx >= 175 && mx <= 325 && my >= 420 && my <= 460) startGame();
   }
 
-  // Left arrow
-  if (mx >= 60 && mx <= 120 && my >= 170 && my <= 230) {
-    selectedIndex = getNextUnlockedCharacter(selectedIndex, -1);
-    targetOffset = selectedIndex * 200;
+  if (gameState === "playing") {
+    const rect = canvas.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) / scale;
+    const my = (e.clientY - rect.top) / scale;
+    
+    // Check targeting mode menu button
+    if (mx >= 150 && mx <= 350 && my >= 15 && my <= 35) {
+      targetingMenuOpen = !targetingMenuOpen;
+    }
+    
+    // Check targeting mode options in dropdown
+    if (targetingMenuOpen) {
+      for (let i = 0; i < targetingModes.length; i++) {
+        if (mx >= 160 && mx <= 340 && my >= 40 + i * 20 && my <= 55 + i * 20) {
+          bluBotTargetMode = targetingModes[i];
+          targetingMenuOpen = false;
+        }
+      }
+    }
   }
-  // Right arrow
-  if (mx >= 380 && mx <= 440 && my >= 170 && my <= 230) {
-    selectedIndex = getNextUnlockedCharacter(selectedIndex, 1);
-    targetOffset = selectedIndex * 200;
-  }
-  // Start button
-  if (mx >= 175 && mx <= 325 && my >= 420 && my <= 460) startGame();
 });
 
 function startGame() {
@@ -177,31 +201,41 @@ function updateBluBots() {
   for (let i = bluBots.length - 1; i >= 0; i--) {
     const bot = bluBots[i];
     
-    // Find nearest enemy
-    let nearestEnemy = null;
-    let nearestDist = Infinity;
+    // Find all enemies within range
+    const enemiesInRange = [];
     
     // Check boss
     if (boss && boss.hp > 0) {
       const dist = distEntities(bot, boss);
-      if (dist < nearestDist) {
-        nearestDist = dist;
-        nearestEnemy = boss;
-      }
+      if (dist < 150) enemiesInRange.push({ enemy: boss, dist: dist, type: 'boss' });
     }
     
     // Check minions
     for (const minion of minions) {
-      if (minion.hp > 0) { // Only target alive minions
+      if (minion.hp > 0) {
         const dist = distEntities(bot, minion);
-        if (dist < nearestDist) {
-          nearestDist = dist;
-          nearestEnemy = minion;
-        }
+        if (dist < 150) enemiesInRange.push({ enemy: minion, dist: dist, type: 'minion' });
       }
     }
     
-    if (nearestEnemy && nearestDist < 150) { // Max targeting range
+    // Apply targeting mode
+    let nearestEnemy = null;
+    if (enemiesInRange.length > 0) {
+      if (bluBotTargetMode === "Closest") {
+        nearestEnemy = enemiesInRange.reduce((a, b) => a.dist < b.dist ? a : b).enemy;
+      } else if (bluBotTargetMode === "Random") {
+        nearestEnemy = enemiesInRange[Math.floor(Math.random() * enemiesInRange.length)].enemy;
+      } else if (bluBotTargetMode === "Strongest") {
+        nearestEnemy = enemiesInRange.reduce((a, b) => a.enemy.maxHp > b.enemy.maxHp ? a : b).enemy;
+      } else if (bluBotTargetMode === "Weakest") {
+        nearestEnemy = enemiesInRange.reduce((a, b) => a.enemy.hp < b.enemy.hp ? a : b).enemy;
+      } else if (bluBotTargetMode === "Boss First") {
+        const bossTarget = enemiesInRange.find(e => e.type === 'boss');
+        nearestEnemy = bossTarget ? bossTarget.enemy : enemiesInRange[0].enemy;
+      }
+    }
+    
+    if (nearestEnemy) {
       // Check if current target is still alive
       if (bot.target && bot.target.hp <= 0) {
         bot.target = null;
